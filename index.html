@@ -262,6 +262,70 @@
             opacity: 0.9;
         }
 
+        .sync-status {
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: 0.9em;
+            color: #1976d2;
+        }
+
+        .sync-status.error {
+            background: #ffebee;
+            border-color: #f44336;
+            color: #c62828;
+        }
+
+        .sync-status.success {
+            background: #e8f5e8;
+            border-color: #4caf50;
+            color: #2e7d32;
+        }
+
+        .password-dialog {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .password-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .password-content h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .password-content input {
+            margin-bottom: 15px;
+        }
+
+        .password-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .password-buttons button {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
         @media (max-width: 480px) {
             .container {
                 margin: 5px;
@@ -290,6 +354,11 @@
         </div>
 
         <div class="content">
+            <!-- Estado de sincronización -->
+            <div id="sync-status" class="sync-status">
+                📡 Inicializando sistema...
+            </div>
+
             <!-- Pestañas de navegación -->
             <div class="tabs">
                 <button class="tab active" onclick="switchTab('validacion')">Validación</button>
@@ -379,7 +448,8 @@
                 <div class="section">
                     <h3>📝 Registros Recientes</h3>
                     <button class="btn-success" onclick="exportarCSV()">📊 Exportar CSV</button>
-                    <button class="btn-danger" onclick="limpiarRegistros()">🗑️ Limpiar Todo</button>
+                    <button class="btn-secondary" onclick="sincronizarRegistros()">🔄 Actualizar</button>
+                    <button class="btn-danger" onclick="mostrarDialogoLimpiar()">🗑️ Limpiar Todo</button>
                 </div>
 
                 <div id="lista-registros">
@@ -390,39 +460,67 @@
             <!-- Pestaña de Configuración -->
             <div id="tab-configuracion" class="tab-content hidden">
                 <div class="section">
-                    <h3>⚙️ Configuración</h3>
+                    <h3>⚙️ Configuración del Sistema</h3>
                     <div class="alert alert-info">
-                        <strong>Instrucciones:</strong> Suba el archivo CSV con la lista de empleados y docentes autorizados.
-                        <br><br>
-                        <strong>Formato esperado:</strong><br>
-                        columna1,cedula,apellidos,nombres,tipo,area<br>
-                        1,1104873425,ABAD JARAMILLO,PAOLA BELEN,Docentes,Dirección de Ciencias Humanas
+                        <strong>Sistema de Base de Datos Compartida:</strong> Este sistema usa GitHub para almacenar tanto la base de datos de empleados como los registros de ventas, permitiendo acceso desde cualquier dispositivo.
                     </div>
                 </div>
 
                 <div class="section">
-                    <h3>📂 Cargar Base de Datos</h3>
+                    <h3>👥 Base de Datos de Empleados</h3>
+                    <div class="form-group">
+                        <label for="github-empleados-url">URL del archivo CSV de empleados:</label>
+                        <input type="url" id="github-empleados-url" placeholder="https://raw.githubusercontent.com/usuario/repo/main/empleados_docentes.csv">
+                    </div>
+                    <button onclick="cargarEmpleadosDesdeGitHub()">🔗 Cargar Empleados</button>
+                </div>
+
+                <div class="section">
+                    <h3>📊 Base de Datos de Registros</h3>
+                    <div class="form-group">
+                        <label for="github-registros-url">URL del archivo CSV de registros:</label>
+                        <input type="url" id="github-registros-url" placeholder="https://raw.githubusercontent.com/usuario/repo/main/registros_ventas.csv">
+                    </div>
+                    <button onclick="cargarRegistrosDesdeGitHub()">🔗 Cargar Registros</button>
+                    
+                    <div class="alert alert-info" style="margin-top: 10px;">
+                        <strong>Nota:</strong> Para que los registros se compartan entre dispositivos, necesitas crear un archivo llamado "registros_ventas.csv" en tu repositorio de GitHub. El sistema creará registros locales que después puedes exportar y subir manualmente a GitHub.
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h3>📂 Carga Manual de Archivos</h3>
                     <div class="file-drop" id="file-drop" onclick="document.getElementById('csv-file').click()">
                         <p>📁 Haz clic aquí o arrastra el archivo CSV</p>
-                        <p style="font-size: 0.9em; color: #666;">Formato: nro,cedula,apellidos,nombres,tipo,area</p>
+                        <p style="font-size: 0.9em; color: #666;">Para empleados: nro,cedula,apellidos,nombres,tipo,area</p>
                     </div>
                     <input type="file" id="csv-file" accept=".csv" style="display: none;" onchange="cargarCSV(event)">
                 </div>
 
                 <div class="section">
-                    <h3>🔗 Cargar desde GitHub</h3>
-                    <div class="form-group">
-                        <label for="github-url">URL del archivo CSV en GitHub:</label>
-                        <input type="url" id="github-url" placeholder="https://raw.githubusercontent.com/usuario/repo/main/archivo.csv">
-                    </div>
-                    <button onclick="cargarDesdeGitHub()">🔗 Cargar desde URL</button>
+                    <h3>📋 Estado del Sistema</h3>
+                    <p>Empleados cargados: <strong id="total-personas">0</strong></p>
+                    <p>Registros cargados: <strong id="total-registros-sistema">0</strong></p>
+                    <button class="btn-secondary" onclick="cargarDatosEjemplo()">📊 Cargar Datos de Ejemplo</button>
                 </div>
 
                 <div class="section">
-                    <h3>📋 Estado de la Base</h3>
-                    <p>Personas cargadas: <strong id="total-personas">0</strong></p>
-                    <button class="btn-secondary" onclick="cargarDatosEjemplo()">📊 Cargar Datos de Ejemplo</button>
+                    <h3>🔐 Configuración de Seguridad</h3>
+                    <p style="font-size: 0.9em; color: #666;">La clave para limpiar registros está configurada en el sistema. Solo los administradores pueden eliminar los registros de ventas.</p>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dialog de contraseña -->
+    <div id="password-dialog" class="password-dialog hidden">
+        <div class="password-content">
+            <h3>🔐 Acceso Restringido</h3>
+            <p>Ingrese la clave de administrador para limpiar los registros:</p>
+            <input type="password" id="admin-password" placeholder="Ingrese la clave">
+            <div class="password-buttons">
+                <button class="btn-secondary" onclick="cerrarDialogoLimpiar()">Cancelar</button>
+                <button class="btn-danger" onclick="validarClaveYLimpiar()">Limpiar</button>
             </div>
         </div>
     </div>
@@ -434,19 +532,15 @@
         // Variables globales
         let personasDB = [];
         let registrosDB = [];
+        const ADMIN_PASSWORD = 'abundancia1122';
+
+        // URLs de configuración (se guardan automáticamente)
+        let urlEmpleados = '';
+        let urlRegistros = '';
 
         // Inicialización de la aplicación
         document.addEventListener('DOMContentLoaded', function() {
-            cargarDatosLocales();
-            actualizarEstadisticas();
-            actualizarListaRegistros();
-            
-            // Intentar cargar automáticamente desde GitHub si hay URL guardada
-            const urlGuardada = localStorage.getItem('github-csv-url');
-            if (urlGuardada) {
-                document.getElementById('github-url').value = urlGuardada;
-                cargarDesdeGitHub();
-            }
+            inicializarSistema();
             
             // Configurar drag & drop para archivos
             const fileDropArea = document.getElementById('file-drop');
@@ -471,10 +565,8 @@
                     
                     if (extension === 'csv') {
                         procesarArchivoCSV(file);
-                    } else if (extension === 'xlsx' || extension === 'xls') {
-                        procesarArchivoExcel(file);
                     } else {
-                        mostrarAlerta('Formato no soportado. Use CSV o Excel', 'error');
+                        mostrarAlerta('Formato no soportado. Use CSV', 'error');
                     }
                 }
             });
@@ -489,184 +581,214 @@
                 logoImg.style.display = 'none';
                 document.getElementById('logo-placeholder').style.display = 'block';
             };
+
+            // Auto-sincronizar cada 2 minutos
+            setInterval(sincronizarRegistros, 120000);
         });
 
-        // Función para cargar desde GitHub
-        function cargarDesdeGitHub() {
-            const url = document.getElementById('github-url').value.trim();
+        // Inicialización completa del sistema
+        async function inicializarSistema() {
+            actualizarEstadoSincronizacion('Cargando configuración...', 'info');
+            
+            // Cargar configuración guardada
+            cargarConfiguracion();
+            
+            // Cargar datos locales primero
+            cargarDatosLocales();
+            
+            // Intentar cargar desde GitHub
+            await cargarDatosDesdeGitHub();
+            
+            // Actualizar interfaz
+            actualizarEstadisticas();
+            actualizarListaRegistros();
+            actualizarContadores();
+            
+            actualizarEstadoSincronizacion('Sistema listo ✅', 'success');
+        }
+
+        // Cargar configuración guardada
+        function cargarConfiguracion() {
+            urlEmpleados = localStorage.getItem('github-empleados-url') || '';
+            urlRegistros = localStorage.getItem('github-registros-url') || '';
+            
+            if (urlEmpleados) {
+                document.getElementById('github-empleados-url').value = urlEmpleados;
+            }
+            if (urlRegistros) {
+                document.getElementById('github-registros-url').value = urlRegistros;
+            }
+        }
+
+        // Cargar datos desde GitHub automáticamente
+        async function cargarDatosDesdeGitHub() {
+            const promesas = [];
+            
+            if (urlEmpleados) {
+                promesas.push(cargarEmpleadosDesdeURL(urlEmpleados));
+            }
+            
+            if (urlRegistros) {
+                promesas.push(cargarRegistrosDesdeURL(urlRegistros));
+            }
+            
+            if (promesas.length > 0) {
+                await Promise.allSettled(promesas);
+            }
+        }
+
+        // Función para cargar empleados desde GitHub
+        async function cargarEmpleadosDesdeGitHub() {
+            const url = document.getElementById('github-empleados-url').value.trim();
             
             if (!url) {
-                mostrarAlerta('Por favor ingrese la URL del archivo CSV', 'error');
+                mostrarAlerta('Por favor ingrese la URL del archivo de empleados', 'error');
                 return;
             }
 
-            // Validar que sea una URL de GitHub
-            if (!url.includes('github.com') && !url.includes('githubusercontent.com')) {
-                mostrarAlerta('Por favor ingrese una URL válida de GitHub', 'error');
-                return;
-            }
-
-            // Convertir URL de GitHub a raw si es necesario
-            let rawUrl = url;
-            if (url.includes('github.com') && !url.includes('raw.githubusercontent.com')) {
-                rawUrl = url.replace('github.com', 'raw.githubusercontent.com').replace('/blob', '');
-            }
-
-            mostrarAlerta('Cargando archivo desde GitHub...', 'info');
-
-            fetch(rawUrl)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`Error HTTP: ${response.status}`);
-                    }
-                    return response.text();
-                })
-                .then(csvContent => {
-                    procesarCSVContent(csvContent);
-                    // Guardar URL para uso futuro
-                    localStorage.setItem('github-csv-url', url);
-                    mostrarAlerta('Archivo cargado exitosamente desde GitHub', 'success');
-                })
-                .catch(error => {
-                    console.error('Error al cargar desde GitHub:', error);
-                    mostrarAlerta(`Error al cargar archivo: ${error.message}`, 'error');
-                });
+            urlEmpleados = url;
+            localStorage.setItem('github-empleados-url', url);
+            
+            await cargarEmpleadosDesdeURL(url);
         }
 
-        // Funciones de navegación por pestañas
-        function switchTab(tabName) {
-            // Ocultar todas las pestañas
-            const tabs = document.querySelectorAll('.tab-content');
-            tabs.forEach(tab => tab.classList.add('hidden'));
+        // Función para cargar registros desde GitHub
+        async function cargarRegistrosDesdeGitHub() {
+            const url = document.getElementById('github-registros-url').value.trim();
             
-            // Remover clase active de todos los botones
-            const tabButtons = document.querySelectorAll('.tab');
-            tabButtons.forEach(btn => btn.classList.remove('active'));
+            if (!url) {
+                mostrarAlerta('Por favor ingrese la URL del archivo de registros', 'error');
+                return;
+            }
+
+            urlRegistros = url;
+            localStorage.setItem('github-registros-url', url);
             
-            // Mostrar pestaña seleccionada
-            document.getElementById('tab-' + tabName).classList.remove('hidden');
+            await cargarRegistrosDesdeURL(url);
+        }
+
+        // Cargar empleados desde URL
+        async function cargarEmpleadosDesdeURL(url) {
+            try {
+                actualizarEstadoSincronizacion('Cargando empleados...', 'info');
+                
+                const rawUrl = convertirAURLRaw(url);
+                const response = await fetch(rawUrl);
+                
+                if (!response.ok) {
+                    throw new Error(`Error HTTP: ${response.status}`);
+                }
+                
+                const csvContent = await response.text();
+                procesarCSVEmpleados(csvContent);
+                
+                mostrarAlerta('Empleados cargados desde GitHub', 'success');
+            } catch (error) {
+                console.error('Error al cargar empleados:', error);
+                mostrarAlerta(`Error al cargar empleados: ${error.message}`, 'error');
+            }
+        }
+
+        // Cargar registros desde URL
+        async function cargarRegistrosDesdeURL(url) {
+            try {
+                actualizarEstadoSincronizacion('Cargando registros...', 'info');
+                
+                const rawUrl = convertirAURLRaw(url);
+                const response = await fetch(rawUrl);
+                
+                if (!response.ok) {
+                    // Si no existe el archivo de registros, no es un error crítico
+                    console.log('Archivo de registros no encontrado, usando registros locales');
+                    return;
+                }
+                
+                const csvContent = await response.text();
+                procesarCSVRegistros(csvContent);
+                
+                mostrarAlerta('Registros sincronizados desde GitHub', 'success');
+            } catch (error) {
+                console.log('No se pudieron cargar registros desde GitHub:', error.message);
+                // No mostrar error ya que es normal que no exista al principio
+            }
+        }
+
+        // Convertir URL de GitHub a raw
+        function convertirAURLRaw(url) {
+            if (url.includes('github.com') && !url.includes('raw.githubusercontent.com')) {
+                return url.replace('github.com', 'raw.githubusercontent.com').replace('/blob', '');
+            }
+            return url;
+        }
+
+        // Sincronizar registros manualmente
+        async function sincronizarRegistros() {
+            actualizarEstadoSincronizacion('Sincronizando...', 'info');
             
-            // Activar botón correspondiente
-            event.target.classList.add('active');
+            if (urlRegistros) {
+                await cargarRegistrosDesdeURL(urlRegistros);
+            }
             
-            // Actualizar datos si es necesario
-            if (tabName === 'registros') {
+            actualizarEstadisticas();
+            actualizarListaRegistros();
+            
+            actualizarEstadoSincronizacion('Sincronizado ✅', 'success');
+            setTimeout(() => {
+                actualizarEstadoSincronizacion('Sistema listo ✅', 'success');
+            }, 2000);
+        }
+
+        // Actualizar estado de sincronización
+        function actualizarEstadoSincronizacion(mensaje, tipo) {
+            const elemento = document.getElementById('sync-status');
+            elemento.textContent = mensaje;
+            elemento.className = `sync-status ${tipo}`;
+        }
+
+        // Mostrar diálogo de contraseña para limpiar
+        function mostrarDialogoLimpiar() {
+            document.getElementById('password-dialog').classList.remove('hidden');
+            document.getElementById('admin-password').focus();
+        }
+
+        // Cerrar diálogo de contraseña
+        function cerrarDialogoLimpiar() {
+            document.getElementById('password-dialog').classList.add('hidden');
+            document.getElementById('admin-password').value = '';
+        }
+
+        // Validar clave y limpiar registros
+        function validarClaveYLimpiar() {
+            const password = document.getElementById('admin-password').value;
+            
+            if (password === ADMIN_PASSWORD) {
+                registrosDB = [];
+                guardarDatosLocales();
                 actualizarEstadisticas();
                 actualizarListaRegistros();
-            }
-        }
-
-        // Función para validar persona (actualizada para nueva estructura)
-        function validarPersona() {
-            const cedula = document.getElementById('cedula').value.trim();
-            
-            if (!cedula) {
-                mostrarAlerta('Por favor ingrese un número de cédula', 'error');
-                return;
-            }
-
-            const persona = personasDB.find(p => p.cedula === cedula);
-            
-            if (persona) {
-                // Mostrar información de la persona
-                document.getElementById('persona-nombre').textContent = `${persona.apellidos} ${persona.nombres}`;
-                document.getElementById('persona-tipo').textContent = persona.tipo;
-                document.getElementById('persona-area').textContent = persona.area;
-                document.getElementById('persona-info').classList.remove('hidden');
+                actualizarContadores();
+                cerrarDialogoLimpiar();
+                mostrarAlerta('Registros eliminados exitosamente', 'success');
                 
-                mostrarAlerta('Persona validada correctamente', 'success');
+                // Mostrar mensaje de que deben actualizar GitHub
+                setTimeout(() => {
+                    mostrarAlerta('Recuerde actualizar el archivo de registros en GitHub', 'info');
+                }, 2000);
             } else {
-                mostrarAlerta('Número de cédula no encontrado en la base de datos', 'error');
-                document.getElementById('persona-info').classList.add('hidden');
+                mostrarAlerta('Clave incorrecta', 'error');
+                document.getElementById('admin-password').value = '';
+                document.getElementById('admin-password').focus();
             }
         }
 
-        // Función para registrar consumo (actualizada)
-        function registrarConsumo() {
-            const cedula = document.getElementById('cedula').value.trim();
-            const items = document.getElementById('items').value.trim();
-            const total = parseFloat(document.getElementById('total').value) || 0;
-            const atendidoPor = document.getElementById('atendido-por').value;
-
-            // Validaciones
-            if (!cedula || !items || total <= 0 || !atendidoPor) {
-                mostrarAlerta('Por favor complete todos los campos', 'error');
-                return;
-            }
-
-            const persona = personasDB.find(p => p.cedula === cedula);
-            if (!persona) {
-                mostrarAlerta('Error: Persona no encontrada', 'error');
-                return;
-            }
-
-            // Crear registro
-            const registro = {
-                id: Date.now(),
-                timestamp: new Date().toISOString(),
-                fecha: new Date().toLocaleDateString('es-EC'),
-                hora: new Date().toLocaleTimeString('es-EC'),
-                cedula: cedula,
-                apellidos: persona.apellidos,
-                nombres: persona.nombres,
-                nombreCompleto: `${persona.apellidos} ${persona.nombres}`,
-                tipo: persona.tipo,
-                area: persona.area,
-                items: items,
-                total: total,
-                atendidoPor: atendidoPor
-            };
-
-            // Guardar registro
-            registrosDB.push(registro);
-            guardarDatosLocales();
-            
-            mostrarAlerta(`Consumo registrado exitosamente. Total: $${total.toFixed(2)}`, 'success');
-            
-            // Limpiar formulario
-            limpiarFormulario();
-            
-            // Actualizar estadísticas
-            actualizarEstadisticas();
-        }
-
-        // Función para limpiar formulario
-        function limpiarFormulario() {
-            document.getElementById('cedula').value = '';
-            document.getElementById('items').value = '';
-            document.getElementById('total').value = '';
-            document.getElementById('atendido-por').value = '';
-            document.getElementById('persona-info').classList.add('hidden');
-        }
-
-        // Función para cargar archivo CSV
-        function cargarCSV(event) {
-            const file = event.target.files[0];
-            if (file) {
-                procesarArchivoCSV(file);
-            }
-        }
-
-        // Función para procesar archivo CSV
-        function procesarArchivoCSV(file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const csvContent = e.target.result;
-                procesarCSVContent(csvContent);
-            };
-            reader.readAsText(file, 'UTF-8');
-        }
-
-        // Función para procesar contenido CSV (nueva estructura)
-        function procesarCSVContent(csvContent) {
+        // Procesar CSV de empleados
+        function procesarCSVEmpleados(csvContent) {
             const lineas = csvContent.split('\n');
             const personas = [];
 
-            // Procesar cada línea (saltar header si existe)
             for (let i = 0; i < lineas.length; i++) {
                 const linea = lineas[i].trim();
-                if (linea && !linea.toLowerCase().includes('apellidos')) { // Saltar header
-                    // Dividir por comas pero respetando comillas
+                if (linea && !linea.toLowerCase().includes('apellidos')) {
                     const columnas = parseCSVLine(linea);
                     
                     if (columnas.length >= 6) {
@@ -692,14 +814,174 @@
             if (personas.length > 0) {
                 personasDB = personas;
                 guardarDatosLocales();
-                actualizarContadorPersonas();
-                mostrarAlerta(`Base de datos actualizada: ${personas.length} personas cargadas`, 'success');
-            } else {
-                mostrarAlerta('No se pudieron procesar los datos del archivo CSV', 'error');
+                actualizarContadores();
             }
         }
 
-        // Función auxiliar para parsear líneas CSV con comillas
+        // Procesar CSV de registros
+        function procesarCSVRegistros(csvContent) {
+            const lineas = csvContent.split('\n');
+            const registros = [];
+
+            for (let i = 1; i < lineas.length; i++) {
+                const linea = lineas[i].trim();
+                if (linea) {
+                    const columnas = parseCSVLine(linea);
+                    
+                    if (columnas.length >= 10) {
+                        const registro = {
+                            id: Date.now() + Math.random(),
+                            timestamp: new Date().toISOString(),
+                            fecha: columnas[0].replace(/"/g, '').trim(),
+                            hora: columnas[1].replace(/"/g, '').trim(),
+                            cedula: columnas[2].replace(/"/g, '').trim(),
+                            apellidos: columnas[3].replace(/"/g, '').trim(),
+                            nombres: columnas[4].replace(/"/g, '').trim(),
+                            nombreCompleto: `${columnas[3].replace(/"/g, '').trim()} ${columnas[4].replace(/"/g, '').trim()}`,
+                            tipo: columnas[5].replace(/"/g, '').trim(),
+                            area: columnas[6].replace(/"/g, '').trim(),
+                            items: columnas[7].replace(/"/g, '').trim(),
+                            total: parseFloat(columnas[8].replace(/"/g, '').trim()) || 0,
+                            atendidoPor: columnas[9].replace(/"/g, '').trim()
+                        };
+                        
+                        registros.push(registro);
+                    }
+                }
+            }
+
+            if (registros.length > 0) {
+                // Combinar registros existentes con los nuevos, evitando duplicados
+                const registrosExistentes = registrosDB.map(r => `${r.fecha}_${r.hora}_${r.cedula}`);
+                const nuevosRegistros = registros.filter(r => 
+                    !registrosExistentes.includes(`${r.fecha}_${r.hora}_${r.cedula}`)
+                );
+                
+                registrosDB = [...registrosDB, ...nuevosRegistros];
+                guardarDatosLocales();
+                actualizarContadores();
+            }
+        }
+
+        // Funciones de navegación por pestañas
+        function switchTab(tabName) {
+            const tabs = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => tab.classList.add('hidden'));
+            
+            const tabButtons = document.querySelectorAll('.tab');
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            
+            document.getElementById('tab-' + tabName).classList.remove('hidden');
+            event.target.classList.add('active');
+            
+            if (tabName === 'registros') {
+                actualizarEstadisticas();
+                actualizarListaRegistros();
+            }
+        }
+
+        // Función para validar persona
+        function validarPersona() {
+            const cedula = document.getElementById('cedula').value.trim();
+            
+            if (!cedula) {
+                mostrarAlerta('Por favor ingrese un número de cédula', 'error');
+                return;
+            }
+
+            const persona = personasDB.find(p => p.cedula === cedula);
+            
+            if (persona) {
+                document.getElementById('persona-nombre').textContent = `${persona.apellidos} ${persona.nombres}`;
+                document.getElementById('persona-tipo').textContent = persona.tipo;
+                document.getElementById('persona-area').textContent = persona.area;
+                document.getElementById('persona-info').classList.remove('hidden');
+                
+                mostrarAlerta('Persona validada correctamente', 'success');
+            } else {
+                mostrarAlerta('Número de cédula no encontrado en la base de datos', 'error');
+                document.getElementById('persona-info').classList.add('hidden');
+            }
+        }
+
+        // Función para registrar consumo
+        function registrarConsumo() {
+            const cedula = document.getElementById('cedula').value.trim();
+            const items = document.getElementById('items').value.trim();
+            const total = parseFloat(document.getElementById('total').value) || 0;
+            const atendidoPor = document.getElementById('atendido-por').value;
+
+            if (!cedula || !items || total <= 0 || !atendidoPor) {
+                mostrarAlerta('Por favor complete todos los campos', 'error');
+                return;
+            }
+
+            const persona = personasDB.find(p => p.cedula === cedula);
+            if (!persona) {
+                mostrarAlerta('Error: Persona no encontrada', 'error');
+                return;
+            }
+
+            const registro = {
+                id: Date.now(),
+                timestamp: new Date().toISOString(),
+                fecha: new Date().toLocaleDateString('es-EC'),
+                hora: new Date().toLocaleTimeString('es-EC'),
+                cedula: cedula,
+                apellidos: persona.apellidos,
+                nombres: persona.nombres,
+                nombreCompleto: `${persona.apellidos} ${persona.nombres}`,
+                tipo: persona.tipo,
+                area: persona.area,
+                items: items,
+                total: total,
+                atendidoPor: atendidoPor
+            };
+
+            registrosDB.push(registro);
+            guardarDatosLocales();
+            
+            mostrarAlerta(`Consumo registrado exitosamente. Total: ${total.toFixed(2)}`, 'success');
+            
+            // Mostrar recordatorio para sincronizar
+            setTimeout(() => {
+                mostrarAlerta('Recordatorio: Exporte y actualice los registros en GitHub regularmente', 'info');
+            }, 3000);
+            
+            limpiarFormulario();
+            actualizarEstadisticas();
+            actualizarContadores();
+        }
+
+        // Función para limpiar formulario
+        function limpiarFormulario() {
+            document.getElementById('cedula').value = '';
+            document.getElementById('items').value = '';
+            document.getElementById('total').value = '';
+            document.getElementById('atendido-por').value = '';
+            document.getElementById('persona-info').classList.add('hidden');
+        }
+
+        // Función para cargar archivo CSV
+        function cargarCSV(event) {
+            const file = event.target.files[0];
+            if (file) {
+                procesarArchivoCSV(file);
+            }
+        }
+
+        // Función para procesar archivo CSV
+        function procesarArchivoCSV(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const csvContent = e.target.result;
+                procesarCSVEmpleados(csvContent);
+                mostrarAlerta(`Archivo procesado: ${personasDB.length} empleados cargados`, 'success');
+            };
+            reader.readAsText(file, 'UTF-8');
+        }
+
+        // Función auxiliar para parsear líneas CSV
         function parseCSVLine(line) {
             const result = [];
             let current = '';
@@ -722,7 +1004,7 @@
             return result;
         }
 
-        // Función para cargar datos de ejemplo (actualizada)
+        // Función para cargar datos de ejemplo
         function cargarDatosEjemplo() {
             personasDB = [
                 { cedula: "1104873425", apellidos: "ABAD JARAMILLO", nombres: "PAOLA BELEN", tipo: "Docentes", area: "Dirección de Ciencias Humanas" },
@@ -737,11 +1019,11 @@
             ];
             
             guardarDatosLocales();
-            actualizarContadorPersonas();
+            actualizarContadores();
             mostrarAlerta('Datos de ejemplo cargados exitosamente', 'success');
         }
 
-        // Función para exportar registros a CSV (actualizada)
+        // Función para exportar registros a CSV
         function exportarCSV() {
             if (registrosDB.length === 0) {
                 mostrarAlerta('No hay registros para exportar', 'error');
@@ -754,29 +1036,22 @@
                 csv += `"${registro.fecha}","${registro.hora}","${registro.cedula}","${registro.apellidos}","${registro.nombres}","${registro.tipo}","${registro.area}","${registro.items}","${registro.total}","${registro.atendidoPor}"\n`;
             });
 
-            // Crear y descargar archivo
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement('a');
             const url = URL.createObjectURL(blob);
             link.setAttribute('href', url);
-            link.setAttribute('download', `consumos_foodtruck_${new Date().toISOString().split('T')[0]}.csv`);
+            link.setAttribute('download', `registros_ventas_${new Date().toISOString().split('T')[0]}.csv`);
             link.style.visibility = 'hidden';
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
 
             mostrarAlerta('Archivo CSV exportado exitosamente', 'success');
-        }
-
-        // Función para limpiar registros
-        function limpiarRegistros() {
-            if (confirm('¿Está seguro que desea eliminar todos los registros? Esta acción no se puede deshacer.')) {
-                registrosDB = [];
-                guardarDatosLocales();
-                actualizarEstadisticas();
-                actualizarListaRegistros();
-                mostrarAlerta('Registros eliminados exitosamente', 'success');
-            }
+            
+            // Mostrar instrucciones para GitHub
+            setTimeout(() => {
+                mostrarAlerta('Suba este archivo a GitHub como "registros_ventas.csv" para compartir entre dispositivos', 'info');
+            }, 2000);
         }
 
         // Función para actualizar estadísticas
@@ -790,7 +1065,7 @@
             document.getElementById('total-monto').textContent = `${totalMonto.toFixed(2)}`;
         }
 
-        // Función para actualizar lista de registros (actualizada)
+        // Función para actualizar lista de registros
         function actualizarListaRegistros() {
             const container = document.getElementById('lista-registros');
             container.innerHTML = '';
@@ -800,7 +1075,6 @@
                 return;
             }
 
-            // Mostrar últimos 10 registros
             const registrosRecientes = registrosDB.slice(-10).reverse();
             
             registrosRecientes.forEach(registro => {
@@ -817,9 +1091,10 @@
             });
         }
 
-        // Función para actualizar contador de personas
-        function actualizarContadorPersonas() {
+        // Función para actualizar contadores
+        function actualizarContadores() {
             document.getElementById('total-personas').textContent = personasDB.length;
+            document.getElementById('total-registros-sistema').textContent = registrosDB.length;
         }
 
         // Función para mostrar alertas
@@ -829,18 +1104,22 @@
             alert.className = `alert alert-${tipo === 'success' ? 'success' : tipo === 'info' ? 'info' : 'error'}`;
             alert.textContent = mensaje;
             alert.style.marginBottom = '10px';
+            alert.style.boxShadow = '0 4px 12px rgba(0,0,0,0.3)';
+            alert.style.borderRadius = '8px';
+            alert.style.fontSize = '0.9em';
+            alert.style.maxWidth = '300px';
+            alert.style.wordWrap = 'break-word';
             
             alertasContainer.appendChild(alert);
             
-            // Auto-remover después de 3 segundos
             setTimeout(() => {
                 if (alert.parentNode) {
                     alert.parentNode.removeChild(alert);
                 }
-            }, 3000);
+            }, tipo === 'info' ? 5000 : 3000);
         }
 
-        // Funciones de almacenamiento local (actualizadas)
+        // Funciones de almacenamiento local
         function guardarDatosLocales() {
             localStorage.setItem('personasDB', JSON.stringify(personasDB));
             localStorage.setItem('registrosDB', JSON.stringify(registrosDB));
@@ -858,13 +1137,33 @@
                 registrosDB = JSON.parse(registrosGuardados);
             }
             
-            actualizarContadorPersonas();
+            actualizarContadores();
         }
 
-        // Permitir Enter para validar
-        document.getElementById('cedula').addEventListener('keypress', function(e) {
+        // Permitir Enter para validar y para la contraseña
+        document.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
-                validarPersona();
+                const activeElement = document.activeElement;
+                
+                if (activeElement.id === 'cedula') {
+                    validarPersona();
+                } else if (activeElement.id === 'admin-password') {
+                    validarClaveYLimpiar();
+                }
+            }
+        });
+
+        // Precargar configuración común de GitHub
+        window.addEventListener('load', function() {
+            const empleadosUrl = document.getElementById('github-empleados-url');
+            const registrosUrl = document.getElementById('github-registros-url');
+            
+            // Si no hay URLs configuradas, sugerir formato
+            if (!empleadosUrl.value) {
+                empleadosUrl.placeholder = "https://raw.githubusercontent.com/tu-usuario/tu-repo/main/empleados_docentes.csv";
+            }
+            if (!registrosUrl.value) {
+                registrosUrl.placeholder = "https://raw.githubusercontent.com/tu-usuario/tu-repo/main/registros_ventas.csv";
             }
         });
     </script>
