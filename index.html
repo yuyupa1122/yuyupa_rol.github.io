@@ -285,7 +285,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🚚 Food Truck Universidad</h1>
+            <h1>🚚 YUYUPA</h1>
             <p>Sistema de Validación y Registro</p>
         </div>
 
@@ -306,6 +306,16 @@
                         <input type="text" id="cedula" placeholder="Ingrese número de cédula">
                     </div>
                     <button onclick="validarProfesor()">Validar</button>
+                    
+                    <!-- Logo Principal -->
+                    <div style="text-align: center; margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 10px; border: 2px dashed #ddd;">
+                        <img id="logo-principal" src="images/logo-yuyupa.png" alt="YUYUPA Logo" style="max-width: 200px; height: auto; display: none;">
+                        <div id="logo-placeholder" style="padding: 40px 20px; color: #666;">
+                            <div style="font-size: 3em; margin-bottom: 10px;">🏪</div>
+                            <p><strong>YUYUPA</strong></p>
+                            <p style="font-size: 0.9em;">[Espacio reservado para logo]</p>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Información del profesor validado -->
@@ -344,6 +354,14 @@
 
             <!-- Pestaña de Registros -->
             <div id="tab-registros" class="tab-content hidden">
+                <!-- Logo pequeño en registros -->
+                <div style="text-align: center; margin-bottom: 15px;">
+                    <img src="images/logo-yuyupa-small.png" alt="YUYUPA" style="height: 40px; display: none;" id="logo-registros">
+                    <div style="display: inline-block; padding: 8px 15px; background: #f8f9fa; border-radius: 20px; color: #666; font-size: 0.9em;" id="logo-registros-placeholder">
+                        🏪 <strong>YUYUPA</strong>
+                    </div>
+                </div>
+
                 <div class="section">
                     <h3>📊 Estadísticas del Día</h3>
                     <div class="stats">
@@ -428,9 +446,30 @@
                 this.classList.remove('dragover');
                 const files = e.dataTransfer.files;
                 if (files.length > 0) {
-                    procesarArchivoCSV(files[0]);
+                    const file = files[0];
+                    const extension = file.name.split('.').pop().toLowerCase();
+                    
+                    if (extension === 'csv') {
+                        procesarArchivoCSV(file);
+                    } else if (extension === 'xlsx' || extension === 'xls') {
+                        procesarArchivoExcel(file);
+                    } else {
+                        mostrarAlerta('Formato no soportado. Use CSV o Excel', 'error');
+                    }
                 }
             });
+
+            // Intentar cargar el logo si existe
+            const logoImg = document.getElementById('logo-principal');
+            logoImg.onload = function() {
+                document.getElementById('logo-placeholder').style.display = 'none';
+                logoImg.style.display = 'block';
+            };
+            logoImg.onerror = function() {
+                // El logo no existe, mantener placeholder visible
+                logoImg.style.display = 'none';
+                document.getElementById('logo-placeholder').style.display = 'block';
+            };
         });
 
         // Funciones de navegación por pestañas
@@ -541,11 +580,78 @@
             document.getElementById('profesor-info').classList.add('hidden');
         }
 
-        // Función para cargar archivo CSV
-        function cargarCSV(event) {
+        // Función para cargar archivo (CSV o Excel)
+        function cargarArchivo(event) {
             const file = event.target.files[0];
             if (file) {
-                procesarArchivoCSV(file);
+                const extension = file.name.split('.').pop().toLowerCase();
+                
+                if (extension === 'csv') {
+                    procesarArchivoCSV(file);
+                } else if (extension === 'xlsx' || extension === 'xls') {
+                    procesarArchivoExcel(file);
+                } else {
+                    mostrarAlerta('Formato de archivo no soportado. Use CSV o Excel (.xlsx/.xls)', 'error');
+                }
+            }
+        }
+
+        // Función para procesar archivo Excel
+        function procesarArchivoExcel(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    // Cargar la librería XLSX si no está cargada
+                    if (typeof XLSX === 'undefined') {
+                        const script = document.createElement('script');
+                        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+                        script.onload = function() {
+                            procesarDatosExcel(e.target.result);
+                        };
+                        document.head.appendChild(script);
+                    } else {
+                        procesarDatosExcel(e.target.result);
+                    }
+                } catch (error) {
+                    mostrarAlerta('Error al procesar archivo Excel: ' + error.message, 'error');
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // Función auxiliar para procesar datos de Excel
+        function procesarDatosExcel(data) {
+            try {
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+                const profesores = [];
+                
+                // Procesar filas (saltar header)
+                for (let i = 1; i < jsonData.length; i++) {
+                    const fila = jsonData[i];
+                    if (fila.length >= 4 && fila[0]) {
+                        profesores.push({
+                            cedula: String(fila[0]).trim(),
+                            nombre: String(fila[1] || '').trim(),
+                            facultad: String(fila[2] || '').trim(),
+                            estado: String(fila[3] || 'Activo').trim()
+                        });
+                    }
+                }
+
+                if (profesores.length > 0) {
+                    profesoresDB = profesores;
+                    guardarDatosLocales();
+                    actualizarContadorProfesores();
+                    mostrarAlerta(`Excel procesado: ${profesores.length} profesores cargados`, 'success');
+                } else {
+                    mostrarAlerta('No se encontraron datos válidos en el archivo Excel', 'error');
+                }
+            } catch (error) {
+                mostrarAlerta('Error al procesar Excel: ' + error.message, 'error');
             }
         }
 
