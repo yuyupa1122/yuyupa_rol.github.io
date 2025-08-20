@@ -300,12 +300,12 @@
             <!-- Pestaña de Validación -->
             <div id="tab-validacion" class="tab-content">
                 <div class="section">
-                    <h3>🔍 Validar Profesor</h3>
+                    <h3>🔍 Validar Empleado/Docente</h3>
                     <div class="form-group">
                         <label for="cedula">Número de Cédula:</label>
                         <input type="text" id="cedula" placeholder="Ingrese número de cédula">
                     </div>
-                    <button onclick="validarProfesor()">Validar</button>
+                    <button onclick="validarPersona()">Validar</button>
                     
                     <!-- Logo Principal -->
                     <div style="text-align: center; margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 10px; border: 2px dashed #ddd;">
@@ -318,13 +318,13 @@
                     </div>
                 </div>
 
-                <!-- Información del profesor validado -->
-                <div id="profesor-info" class="hidden">
+                <!-- Información de la persona validada -->
+                <div id="persona-info" class="hidden">
                     <div class="profesor-info">
-                        <h4>✅ Profesor Autorizado</h4>
-                        <p><strong>Nombre:</strong> <span id="profesor-nombre"></span></p>
-                        <p><strong>Facultad:</strong> <span id="profesor-facultad"></span></p>
-                        <p><strong>Estado:</strong> <span id="profesor-estado"></span></p>
+                        <h4>✅ Persona Autorizada</h4>
+                        <p><strong>Nombre:</strong> <span id="persona-nombre"></span></p>
+                        <p><strong>Tipo:</strong> <span id="persona-tipo"></span></p>
+                        <p><strong>Área:</strong> <span id="persona-area"></span></p>
                     </div>
 
                     <div class="section">
@@ -392,7 +392,11 @@
                 <div class="section">
                     <h3>⚙️ Configuración</h3>
                     <div class="alert alert-info">
-                        <strong>Instrucciones:</strong> Sube el archivo CSV proporcionado por la universidad con la lista de profesores autorizados.
+                        <strong>Instrucciones:</strong> Suba el archivo CSV con la lista de empleados y docentes autorizados.
+                        <br><br>
+                        <strong>Formato esperado:</strong><br>
+                        columna1,cedula,apellidos,nombres,tipo,area<br>
+                        1,1104873425,ABAD JARAMILLO,PAOLA BELEN,Docentes,Dirección de Ciencias Humanas
                     </div>
                 </div>
 
@@ -400,14 +404,23 @@
                     <h3>📂 Cargar Base de Datos</h3>
                     <div class="file-drop" id="file-drop" onclick="document.getElementById('csv-file').click()">
                         <p>📁 Haz clic aquí o arrastra el archivo CSV</p>
-                        <p style="font-size: 0.9em; color: #666;">Formato: cedula,nombre,facultad,estado</p>
+                        <p style="font-size: 0.9em; color: #666;">Formato: nro,cedula,apellidos,nombres,tipo,area</p>
                     </div>
                     <input type="file" id="csv-file" accept=".csv" style="display: none;" onchange="cargarCSV(event)">
                 </div>
 
                 <div class="section">
+                    <h3>🔗 Cargar desde GitHub</h3>
+                    <div class="form-group">
+                        <label for="github-url">URL del archivo CSV en GitHub:</label>
+                        <input type="url" id="github-url" placeholder="https://raw.githubusercontent.com/usuario/repo/main/archivo.csv">
+                    </div>
+                    <button onclick="cargarDesdeGitHub()">🔗 Cargar desde URL</button>
+                </div>
+
+                <div class="section">
                     <h3>📋 Estado de la Base</h3>
-                    <p>Profesores cargados: <strong id="total-profesores">0</strong></p>
+                    <p>Personas cargadas: <strong id="total-personas">0</strong></p>
                     <button class="btn-secondary" onclick="cargarDatosEjemplo()">📊 Cargar Datos de Ejemplo</button>
                 </div>
             </div>
@@ -419,7 +432,7 @@
 
     <script>
         // Variables globales
-        let profesoresDB = [];
+        let personasDB = [];
         let registrosDB = [];
 
         // Inicialización de la aplicación
@@ -427,6 +440,13 @@
             cargarDatosLocales();
             actualizarEstadisticas();
             actualizarListaRegistros();
+            
+            // Intentar cargar automáticamente desde GitHub si hay URL guardada
+            const urlGuardada = localStorage.getItem('github-csv-url');
+            if (urlGuardada) {
+                document.getElementById('github-url').value = urlGuardada;
+                cargarDesdeGitHub();
+            }
             
             // Configurar drag & drop para archivos
             const fileDropArea = document.getElementById('file-drop');
@@ -466,11 +486,52 @@
                 logoImg.style.display = 'block';
             };
             logoImg.onerror = function() {
-                // El logo no existe, mantener placeholder visible
                 logoImg.style.display = 'none';
                 document.getElementById('logo-placeholder').style.display = 'block';
             };
         });
+
+        // Función para cargar desde GitHub
+        function cargarDesdeGitHub() {
+            const url = document.getElementById('github-url').value.trim();
+            
+            if (!url) {
+                mostrarAlerta('Por favor ingrese la URL del archivo CSV', 'error');
+                return;
+            }
+
+            // Validar que sea una URL de GitHub
+            if (!url.includes('github.com') && !url.includes('githubusercontent.com')) {
+                mostrarAlerta('Por favor ingrese una URL válida de GitHub', 'error');
+                return;
+            }
+
+            // Convertir URL de GitHub a raw si es necesario
+            let rawUrl = url;
+            if (url.includes('github.com') && !url.includes('raw.githubusercontent.com')) {
+                rawUrl = url.replace('github.com', 'raw.githubusercontent.com').replace('/blob', '');
+            }
+
+            mostrarAlerta('Cargando archivo desde GitHub...', 'info');
+
+            fetch(rawUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Error HTTP: ${response.status}`);
+                    }
+                    return response.text();
+                })
+                .then(csvContent => {
+                    procesarCSVContent(csvContent);
+                    // Guardar URL para uso futuro
+                    localStorage.setItem('github-csv-url', url);
+                    mostrarAlerta('Archivo cargado exitosamente desde GitHub', 'success');
+                })
+                .catch(error => {
+                    console.error('Error al cargar desde GitHub:', error);
+                    mostrarAlerta(`Error al cargar archivo: ${error.message}`, 'error');
+                });
+        }
 
         // Funciones de navegación por pestañas
         function switchTab(tabName) {
@@ -495,8 +556,8 @@
             }
         }
 
-        // Función para validar profesor
-        function validarProfesor() {
+        // Función para validar persona (actualizada para nueva estructura)
+        function validarPersona() {
             const cedula = document.getElementById('cedula').value.trim();
             
             if (!cedula) {
@@ -504,28 +565,23 @@
                 return;
             }
 
-            const profesor = profesoresDB.find(p => p.cedula === cedula);
+            const persona = personasDB.find(p => p.cedula === cedula);
             
-            if (profesor) {
-                if (profesor.estado.toLowerCase() === 'activo') {
-                    // Mostrar información del profesor
-                    document.getElementById('profesor-nombre').textContent = profesor.nombre;
-                    document.getElementById('profesor-facultad').textContent = profesor.facultad;
-                    document.getElementById('profesor-estado').textContent = profesor.estado;
-                    document.getElementById('profesor-info').classList.remove('hidden');
-                    
-                    mostrarAlerta('Profesor validado correctamente', 'success');
-                } else {
-                    mostrarAlerta('Profesor no autorizado para realizar compras', 'error');
-                    document.getElementById('profesor-info').classList.add('hidden');
-                }
+            if (persona) {
+                // Mostrar información de la persona
+                document.getElementById('persona-nombre').textContent = `${persona.apellidos} ${persona.nombres}`;
+                document.getElementById('persona-tipo').textContent = persona.tipo;
+                document.getElementById('persona-area').textContent = persona.area;
+                document.getElementById('persona-info').classList.remove('hidden');
+                
+                mostrarAlerta('Persona validada correctamente', 'success');
             } else {
                 mostrarAlerta('Número de cédula no encontrado en la base de datos', 'error');
-                document.getElementById('profesor-info').classList.add('hidden');
+                document.getElementById('persona-info').classList.add('hidden');
             }
         }
 
-        // Función para registrar consumo
+        // Función para registrar consumo (actualizada)
         function registrarConsumo() {
             const cedula = document.getElementById('cedula').value.trim();
             const items = document.getElementById('items').value.trim();
@@ -538,9 +594,9 @@
                 return;
             }
 
-            const profesor = profesoresDB.find(p => p.cedula === cedula);
-            if (!profesor) {
-                mostrarAlerta('Error: Profesor no encontrado', 'error');
+            const persona = personasDB.find(p => p.cedula === cedula);
+            if (!persona) {
+                mostrarAlerta('Error: Persona no encontrada', 'error');
                 return;
             }
 
@@ -551,8 +607,11 @@
                 fecha: new Date().toLocaleDateString('es-EC'),
                 hora: new Date().toLocaleTimeString('es-EC'),
                 cedula: cedula,
-                nombre: profesor.nombre,
-                facultad: profesor.facultad,
+                apellidos: persona.apellidos,
+                nombres: persona.nombres,
+                nombreCompleto: `${persona.apellidos} ${persona.nombres}`,
+                tipo: persona.tipo,
+                area: persona.area,
                 items: items,
                 total: total,
                 atendidoPor: atendidoPor
@@ -577,81 +636,14 @@
             document.getElementById('items').value = '';
             document.getElementById('total').value = '';
             document.getElementById('atendido-por').value = '';
-            document.getElementById('profesor-info').classList.add('hidden');
+            document.getElementById('persona-info').classList.add('hidden');
         }
 
-        // Función para cargar archivo (CSV o Excel)
-        function cargarArchivo(event) {
+        // Función para cargar archivo CSV
+        function cargarCSV(event) {
             const file = event.target.files[0];
             if (file) {
-                const extension = file.name.split('.').pop().toLowerCase();
-                
-                if (extension === 'csv') {
-                    procesarArchivoCSV(file);
-                } else if (extension === 'xlsx' || extension === 'xls') {
-                    procesarArchivoExcel(file);
-                } else {
-                    mostrarAlerta('Formato de archivo no soportado. Use CSV o Excel (.xlsx/.xls)', 'error');
-                }
-            }
-        }
-
-        // Función para procesar archivo Excel
-        function procesarArchivoExcel(file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    // Cargar la librería XLSX si no está cargada
-                    if (typeof XLSX === 'undefined') {
-                        const script = document.createElement('script');
-                        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
-                        script.onload = function() {
-                            procesarDatosExcel(e.target.result);
-                        };
-                        document.head.appendChild(script);
-                    } else {
-                        procesarDatosExcel(e.target.result);
-                    }
-                } catch (error) {
-                    mostrarAlerta('Error al procesar archivo Excel: ' + error.message, 'error');
-                }
-            };
-            reader.readAsArrayBuffer(file);
-        }
-
-        // Función auxiliar para procesar datos de Excel
-        function procesarDatosExcel(data) {
-            try {
-                const workbook = XLSX.read(data, { type: 'array' });
-                const firstSheetName = workbook.SheetNames[0];
-                const worksheet = workbook.Sheets[firstSheetName];
-                const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-
-                const profesores = [];
-                
-                // Procesar filas (saltar header)
-                for (let i = 1; i < jsonData.length; i++) {
-                    const fila = jsonData[i];
-                    if (fila.length >= 4 && fila[0]) {
-                        profesores.push({
-                            cedula: String(fila[0]).trim(),
-                            nombre: String(fila[1] || '').trim(),
-                            facultad: String(fila[2] || '').trim(),
-                            estado: String(fila[3] || 'Activo').trim()
-                        });
-                    }
-                }
-
-                if (profesores.length > 0) {
-                    profesoresDB = profesores;
-                    guardarDatosLocales();
-                    actualizarContadorProfesores();
-                    mostrarAlerta(`Excel procesado: ${profesores.length} profesores cargados`, 'success');
-                } else {
-                    mostrarAlerta('No se encontraron datos válidos en el archivo Excel', 'error');
-                }
-            } catch (error) {
-                mostrarAlerta('Error al procesar Excel: ' + error.message, 'error');
+                procesarArchivoCSV(file);
             }
         }
 
@@ -659,70 +651,107 @@
         function procesarArchivoCSV(file) {
             const reader = new FileReader();
             reader.onload = function(e) {
-                const csv = e.target.result;
-                const lineas = csv.split('\n');
-                const profesores = [];
+                const csvContent = e.target.result;
+                procesarCSVContent(csvContent);
+            };
+            reader.readAsText(file, 'UTF-8');
+        }
 
-                // Procesar cada línea (saltar header si existe)
-                for (let i = 1; i < lineas.length; i++) {
-                    const linea = lineas[i].trim();
-                    if (linea) {
-                        const columnas = linea.split(',').map(col => col.trim().replace(/"/g, ''));
-                        if (columnas.length >= 4) {
-                            profesores.push({
-                                cedula: columnas[0],
-                                nombre: columnas[1],
-                                facultad: columnas[2],
-                                estado: columnas[3]
+        // Función para procesar contenido CSV (nueva estructura)
+        function procesarCSVContent(csvContent) {
+            const lineas = csvContent.split('\n');
+            const personas = [];
+
+            // Procesar cada línea (saltar header si existe)
+            for (let i = 0; i < lineas.length; i++) {
+                const linea = lineas[i].trim();
+                if (linea && !linea.toLowerCase().includes('apellidos')) { // Saltar header
+                    // Dividir por comas pero respetando comillas
+                    const columnas = parseCSVLine(linea);
+                    
+                    if (columnas.length >= 6) {
+                        const cedula = columnas[1] ? columnas[1].trim() : '';
+                        const apellidos = columnas[2] ? columnas[2].trim() : '';
+                        const nombres = columnas[3] ? columnas[3].trim() : '';
+                        const tipo = columnas[4] ? columnas[4].trim() : '';
+                        const area = columnas[5] ? columnas[5].trim() : '';
+                        
+                        if (cedula && apellidos && nombres) {
+                            personas.push({
+                                cedula: cedula,
+                                apellidos: apellidos,
+                                nombres: nombres,
+                                tipo: tipo,
+                                area: area
                             });
                         }
                     }
                 }
+            }
 
-                if (profesores.length > 0) {
-                    profesoresDB = profesores;
-                    guardarDatosLocales();
-                    actualizarContadorProfesores();
-                    mostrarAlerta(`Base de datos actualizada: ${profesores.length} profesores cargados`, 'success');
-                } else {
-                    mostrarAlerta('No se pudieron procesar los datos del archivo CSV', 'error');
-                }
-            };
-
-            reader.readAsText(file);
+            if (personas.length > 0) {
+                personasDB = personas;
+                guardarDatosLocales();
+                actualizarContadorPersonas();
+                mostrarAlerta(`Base de datos actualizada: ${personas.length} personas cargadas`, 'success');
+            } else {
+                mostrarAlerta('No se pudieron procesar los datos del archivo CSV', 'error');
+            }
         }
 
-        // Función para cargar datos de ejemplo
+        // Función auxiliar para parsear líneas CSV con comillas
+        function parseCSVLine(line) {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+            
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                
+                if (char === '"') {
+                    inQuotes = !inQuotes;
+                } else if (char === ',' && !inQuotes) {
+                    result.push(current);
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            
+            result.push(current);
+            return result;
+        }
+
+        // Función para cargar datos de ejemplo (actualizada)
         function cargarDatosEjemplo() {
-            profesoresDB = [
-                { cedula: "1720123456", nombre: "Dr. Juan Pérez García", facultad: "Ingeniería", estado: "Activo" },
-                { cedula: "1709876543", nombre: "Dra. María González López", facultad: "Medicina", estado: "Activo" },
-                { cedula: "1798765432", nombre: "Mg. Carlos Rodríguez", facultad: "Administración", estado: "Activo" },
-                { cedula: "1787654321", nombre: "PhD. Ana Martínez", facultad: "Psicología", estado: "Activo" },
-                { cedula: "1776543210", nombre: "Ing. Luis Torres", facultad: "Sistemas", estado: "Activo" },
-                { cedula: "1765432109", nombre: "Lic. Rosa Jiménez", facultad: "Educación", estado: "Inactivo" },
-                { cedula: "1754321098", nombre: "Dr. Miguel Herrera", facultad: "Derecho", estado: "Activo" },
-                { cedula: "1743210987", nombre: "Dra. Patricia Morales", facultad: "Arquitectura", estado: "Activo" },
-                { cedula: "1732109876", nombre: "Mg. Roberto Silva", facultad: "Comunicación", estado: "Activo" },
-                { cedula: "1721098765", nombre: "Lic. Carmen Vega", facultad: "Arte", estado: "Activo" }
+            personasDB = [
+                { cedula: "1104873425", apellidos: "ABAD JARAMILLO", nombres: "PAOLA BELEN", tipo: "Docentes", area: "Dirección de Ciencias Humanas" },
+                { cedula: "1721080578", apellidos: "ABATA MEZA", nombres: "JOSUE ALEXANDER", tipo: "Empleado", area: "Marketing y Admisiones Matriz" },
+                { cedula: "1716292923", apellidos: "AGUILAR RODRIGUEZ", nombres: "DAYANA MARCELA", tipo: "Docentes", area: "Escuela de Medicina" },
+                { cedula: "1707622161", apellidos: "AGUILERA ZURITA", nombres: "FERNANDO NELSON", tipo: "Docentes", area: "Escuela de Odontología" },
+                { cedula: "1713572822", apellidos: "AGUINAGA ITURRALDE", nombres: "MARIA ISABEL", tipo: "Docentes", area: "Escuela de Idiomas Matriz" },
+                { cedula: "1712513256", apellidos: "AGUINAGA ROMERO", nombres: "FERNANDO ESTEBAN", tipo: "Docentes", area: "Posgrados Facultad de Ciencias Médicas de la Salud y la Vida" },
+                { cedula: "1718077702", apellidos: "AGUIRRE ACUÑA", nombres: "MICHELLE FERNANDA", tipo: "Empleado", area: "Investigación y Desarrollo" },
+                { cedula: "1900409267", apellidos: "AGUIRRE AGUILAR", nombres: "JOHANNA PAOLA", tipo: "Docentes", area: "Facultad de Ciencias Médicas de la Salud y de la Vida" },
+                { cedula: "1718186826", apellidos: "AGUIRRE CARCELEN", nombres: "WASHINGTON PAUL", tipo: "Docentes", area: "Escuela de Medicina" }
             ];
             
             guardarDatosLocales();
-            actualizarContadorProfesores();
+            actualizarContadorPersonas();
             mostrarAlerta('Datos de ejemplo cargados exitosamente', 'success');
         }
 
-        // Función para exportar registros a CSV
+        // Función para exportar registros a CSV (actualizada)
         function exportarCSV() {
             if (registrosDB.length === 0) {
                 mostrarAlerta('No hay registros para exportar', 'error');
                 return;
             }
 
-            let csv = 'Fecha,Hora,Cedula,Nombre,Facultad,Items,Total,Atendido_Por\n';
+            let csv = 'Fecha,Hora,Cedula,Apellidos,Nombres,Tipo,Area,Items,Total,Atendido_Por\n';
             
             registrosDB.forEach(registro => {
-                csv += `"${registro.fecha}","${registro.hora}","${registro.cedula}","${registro.nombre}","${registro.facultad}","${registro.items}","${registro.total}","${registro.atendidoPor}"\n`;
+                csv += `"${registro.fecha}","${registro.hora}","${registro.cedula}","${registro.apellidos}","${registro.nombres}","${registro.tipo}","${registro.area}","${registro.items}","${registro.total}","${registro.atendidoPor}"\n`;
             });
 
             // Crear y descargar archivo
@@ -758,10 +787,10 @@
             const totalMonto = registrosHoy.reduce((sum, r) => sum + r.total, 0);
 
             document.getElementById('total-ventas').textContent = totalVentas;
-            document.getElementById('total-monto').textContent = `$${totalMonto.toFixed(2)}`;
+            document.getElementById('total-monto').textContent = `${totalMonto.toFixed(2)}`;
         }
 
-        // Función para actualizar lista de registros
+        // Función para actualizar lista de registros (actualizada)
         function actualizarListaRegistros() {
             const container = document.getElementById('lista-registros');
             container.innerHTML = '';
@@ -779,24 +808,25 @@
                 div.className = 'registro-item';
                 div.innerHTML = `
                     <div class="registro-fecha">${registro.fecha} - ${registro.hora}</div>
-                    <div class="registro-profesor">${registro.nombre} (${registro.cedula})</div>
-                    <div class="registro-items">${registro.items}</div>
-                    <div class="registro-total">Total: $${registro.total.toFixed(2)} - Atendido por: ${registro.atendidoPor}</div>
+                    <div class="registro-profesor">${registro.nombreCompleto} (${registro.cedula})</div>
+                    <div class="registro-items">Tipo: ${registro.tipo} | Área: ${registro.area}</div>
+                    <div class="registro-items">Items: ${registro.items}</div>
+                    <div class="registro-total">Total: ${registro.total.toFixed(2)} - Atendido por: ${registro.atendidoPor}</div>
                 `;
                 container.appendChild(div);
             });
         }
 
-        // Función para actualizar contador de profesores
-        function actualizarContadorProfesores() {
-            document.getElementById('total-profesores').textContent = profesoresDB.length;
+        // Función para actualizar contador de personas
+        function actualizarContadorPersonas() {
+            document.getElementById('total-personas').textContent = personasDB.length;
         }
 
         // Función para mostrar alertas
         function mostrarAlerta(mensaje, tipo) {
             const alertasContainer = document.getElementById('alertas');
             const alert = document.createElement('div');
-            alert.className = `alert alert-${tipo === 'success' ? 'success' : 'error'}`;
+            alert.className = `alert alert-${tipo === 'success' ? 'success' : tipo === 'info' ? 'info' : 'error'}`;
             alert.textContent = mensaje;
             alert.style.marginBottom = '10px';
             
@@ -810,31 +840,31 @@
             }, 3000);
         }
 
-        // Funciones de almacenamiento local
+        // Funciones de almacenamiento local (actualizadas)
         function guardarDatosLocales() {
-            localStorage.setItem('profesoresDB', JSON.stringify(profesoresDB));
+            localStorage.setItem('personasDB', JSON.stringify(personasDB));
             localStorage.setItem('registrosDB', JSON.stringify(registrosDB));
         }
 
         function cargarDatosLocales() {
-            const profesoresGuardados = localStorage.getItem('profesoresDB');
+            const personasGuardadas = localStorage.getItem('personasDB');
             const registrosGuardados = localStorage.getItem('registrosDB');
             
-            if (profesoresGuardados) {
-                profesoresDB = JSON.parse(profesoresGuardados);
+            if (personasGuardadas) {
+                personasDB = JSON.parse(personasGuardadas);
             }
             
             if (registrosGuardados) {
                 registrosDB = JSON.parse(registrosGuardados);
             }
             
-            actualizarContadorProfesores();
+            actualizarContadorPersonas();
         }
 
         // Permitir Enter para validar
         document.getElementById('cedula').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
-                validarProfesor();
+                validarPersona();
             }
         });
     </script>
