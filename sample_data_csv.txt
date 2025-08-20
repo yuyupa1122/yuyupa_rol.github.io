@@ -1,0 +1,11 @@
+cedula,nombre,facultad,estado
+1720123456,"Dr. Juan Pérez García","Ingeniería","Activo"
+1709876543,"Dra. María González López","Medicina","Activo"
+1798765432,"Mg. Carlos Rodríguez","Administración","Activo"
+1787654321,"PhD. Ana Martínez","Psicología","Activo"
+1776543210,"Ing. Luis Torres","Sistemas","Activo"
+1765432109,"Lic. Rosa Jiménez","Educación","Inactivo"
+1754321098,"Dr. Miguel Herrera","Derecho","Activo"
+1743210987,"Dra. Patricia Morales","Arquitectura","Activo"
+1732109876,"Mg. Roberto Silva","Comunicación","Activo"
+1721098765,"Lic. Carmen Vega","Arte","Activo"
