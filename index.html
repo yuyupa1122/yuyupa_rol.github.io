@@ -1,1171 +1,285 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Food Truck - Sistema de Validación</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Yuyupa, street food contemporáneo con wraps, quesadillas, burritos, paninis, nachos, ensaladas y sabores frescos." />
+  <title>Yuyupa | Street Food Contemporáneo</title>
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 10px;
-        }
-
-        .container {
-            max-width: 500px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            overflow: hidden;
-        }
-
-        .header {
-            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
-            color: white;
-            text-align: center;
-            padding: 20px;
-        }
-
-        .header h1 {
-            font-size: 1.8em;
-            margin-bottom: 5px;
-        }
-
-        .header p {
-            opacity: 0.9;
-            font-size: 0.9em;
-        }
-
-        .content {
-            padding: 20px;
-        }
-
-        .section {
-            margin-bottom: 25px;
-        }
-
-        .section h3 {
-            color: #333;
-            margin-bottom: 15px;
-            font-size: 1.2em;
-            border-left: 4px solid #ff6b6b;
-            padding-left: 10px;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 5px;
-            color: #555;
-            font-weight: 500;
-        }
-
-        input, textarea, select {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: border-color 0.3s;
-        }
-
-        input:focus, textarea:focus, select:focus {
-            outline: none;
-            border-color: #ff6b6b;
-        }
-
-        button {
-            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 8px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: transform 0.2s;
-            width: 100%;
-            margin-bottom: 10px;
-        }
-
-        button:hover {
-            transform: translateY(-2px);
-        }
-
-        button:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .btn-secondary {
-            background: linear-gradient(45deg, #74b9ff, #0984e3);
-        }
-
-        .btn-success {
-            background: linear-gradient(45deg, #00b894, #00a085);
-        }
-
-        .btn-danger {
-            background: linear-gradient(45deg, #e17055, #d63031);
-        }
-
-        .alert {
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-        }
-
-        .alert-success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .alert-error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
-        .alert-info {
-            background: #d1ecf1;
-            color: #0c5460;
-            border: 1px solid #bee5eb;
-        }
-
-        .profesor-info {
-            background: #f8f9fa;
-            border: 2px solid #28a745;
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 20px;
-        }
-
-        .profesor-info h4 {
-            color: #28a745;
-            margin-bottom: 10px;
-        }
-
-        .profesor-info p {
-            margin-bottom: 5px;
-            color: #555;
-        }
-
-        .hidden {
-            display: none !important;
-        }
-
-        .tabs {
-            display: flex;
-            background: #f8f9fa;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            overflow: hidden;
-        }
-
-        .tab {
-            flex: 1;
-            padding: 12px;
-            text-align: center;
-            cursor: pointer;
-            transition: background 0.3s;
-            border: none;
-            background: transparent;
-        }
-
-        .tab.active {
-            background: #ff6b6b;
-            color: white;
-        }
-
-        .file-drop {
-            border: 2px dashed #ddd;
-            border-radius: 8px;
-            padding: 20px;
-            text-align: center;
-            cursor: pointer;
-            transition: border-color 0.3s;
-        }
-
-        .file-drop:hover {
-            border-color: #ff6b6b;
-        }
-
-        .file-drop.dragover {
-            border-color: #ff6b6b;
-            background: #fff5f5;
-        }
-
-        .registro-item {
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 10px;
-            border-left: 4px solid #ff6b6b;
-        }
-
-        .registro-fecha {
-            font-size: 0.9em;
-            color: #666;
-            margin-bottom: 5px;
-        }
-
-        .registro-profesor {
-            font-weight: bold;
-            color: #333;
-        }
-
-        .registro-items {
-            color: #555;
-            margin: 5px 0;
-        }
-
-        .registro-total {
-            font-weight: bold;
-            color: #28a745;
-            font-size: 1.1em;
-        }
-
-        .stats {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        .stat-card {
-            background: linear-gradient(45deg, #74b9ff, #0984e3);
-            color: white;
-            padding: 15px;
-            border-radius: 8px;
-            text-align: center;
-        }
-
-        .stat-number {
-            font-size: 1.5em;
-            font-weight: bold;
-        }
-
-        .stat-label {
-            font-size: 0.9em;
-            opacity: 0.9;
-        }
-
-        .sync-status {
-            background: #e3f2fd;
-            border: 1px solid #2196f3;
-            border-radius: 8px;
-            padding: 10px;
-            margin-bottom: 15px;
-            text-align: center;
-            font-size: 0.9em;
-            color: #1976d2;
-        }
-
-        .sync-status.error {
-            background: #ffebee;
-            border-color: #f44336;
-            color: #c62828;
-        }
-
-        .sync-status.success {
-            background: #e8f5e8;
-            border-color: #4caf50;
-            color: #2e7d32;
-        }
-
-        .password-dialog {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.8);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 2000;
-        }
-
-        .password-content {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            max-width: 400px;
-            width: 90%;
-            text-align: center;
-        }
-
-        .password-content h3 {
-            color: #333;
-            margin-bottom: 15px;
-        }
-
-        .password-content input {
-            margin-bottom: 15px;
-        }
-
-        .password-buttons {
-            display: flex;
-            gap: 10px;
-        }
-
-        .password-buttons button {
-            flex: 1;
-            margin-bottom: 0;
-        }
-
-        @media (max-width: 480px) {
-            .container {
-                margin: 5px;
-                border-radius: 10px;
-            }
-            
-            .content {
-                padding: 15px;
-            }
-            
-            .header {
-                padding: 15px;
-            }
-            
-            .header h1 {
-                font-size: 1.5em;
-            }
-        }
-    </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🚚 YUYUPA</h1>
-            <p>Sistema de Validación y Registro</p>
-        </div>
+  <header class="header" id="header">
+    <div class="container nav">
+      <a class="brand" href="#inicio" aria-label="Inicio Yuyupa">
+        <span class="brand-mark brand-mark-logo">
+          <img class="brand-logo-img" src="assets/logo-yuyupa-header.png" alt="Logo Yuyupa">
+        </span>
+        <span class="brand-word">Yuyupa</span>
+      </a>
 
-        <div class="content">
-            <!-- Estado de sincronización -->
-            <div id="sync-status" class="sync-status">
-                📡 Inicializando sistema...
-            </div>
+      <button class="menu-toggle" id="menuToggle" aria-label="Abrir menú" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
 
-            <!-- Pestañas de navegación -->
-            <div class="tabs">
-                <button class="tab active" onclick="switchTab('validacion')">Validación</button>
-                <button class="tab" onclick="switchTab('registros')">Registros</button>
-                <button class="tab" onclick="switchTab('configuracion')">Config</button>
-            </div>
-
-            <!-- Pestaña de Validación -->
-            <div id="tab-validacion" class="tab-content">
-                <div class="section">
-                    <h3>🔍 Validar Empleado/Docente</h3>
-                    <div class="form-group">
-                        <label for="cedula">Número de Cédula:</label>
-                        <input type="text" id="cedula" placeholder="Ingrese número de cédula">
-                    </div>
-                    <button onclick="validarPersona()">Validar</button>
-                    
-                    <!-- Logo Principal -->
-                    <div style="text-align: center; margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 10px; border: 2px dashed #ddd;">
-                        <img id="logo-principal" src="images/logo-yuyupa.png" alt="YUYUPA Logo" style="max-width: 200px; height: auto; display: none;">
-                        <div id="logo-placeholder" style="padding: 40px 20px; color: #666;">
-                            <div style="font-size: 3em; margin-bottom: 10px;">🏪</div>
-                            <p><strong>YUYUPA</strong></p>
-                            <p style="font-size: 0.9em;">[Espacio reservado para logo]</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Información de la persona validada -->
-                <div id="persona-info" class="hidden">
-                    <div class="profesor-info">
-                        <h4>✅ Persona Autorizada</h4>
-                        <p><strong>Nombre:</strong> <span id="persona-nombre"></span></p>
-                        <p><strong>Tipo:</strong> <span id="persona-tipo"></span></p>
-                        <p><strong>Área:</strong> <span id="persona-area"></span></p>
-                    </div>
-
-                    <div class="section">
-                        <h3>🍽️ Registrar Consumo</h3>
-                        <div class="form-group">
-                            <label for="items">Ítems Consumidos:</label>
-                            <textarea id="items" rows="3" placeholder="Ej: Almuerzo ejecutivo, Jugo natural, Postre"></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label for="total">Total ($):</label>
-                            <input type="number" id="total" step="0.01" placeholder="0.00">
-                        </div>
-                        <div class="form-group">
-                            <label for="atendido-por">Atendido por:</label>
-                            <select id="atendido-por">
-                                <option value="">Seleccionar empleado</option>
-                                <option value="Juan Pérez">Juan Pérez</option>
-                                <option value="María González">María González</option>
-                                <option value="Carlos López">Carlos López</option>
-                            </select>
-                        </div>
-                        <button class="btn-success" onclick="registrarConsumo()">💾 Registrar Consumo</button>
-                        <button class="btn-secondary" onclick="limpiarFormulario()">🔄 Nuevo</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Pestaña de Registros -->
-            <div id="tab-registros" class="tab-content hidden">
-                <!-- Logo pequeño en registros -->
-                <div style="text-align: center; margin-bottom: 15px;">
-                    <img src="images/logo-yuyupa-small.png" alt="YUYUPA" style="height: 40px; display: none;" id="logo-registros">
-                    <div style="display: inline-block; padding: 8px 15px; background: #f8f9fa; border-radius: 20px; color: #666; font-size: 0.9em;" id="logo-registros-placeholder">
-                        🏪 <strong>YUYUPA</strong>
-                    </div>
-                </div>
-
-                <div class="section">
-                    <h3>📊 Estadísticas del Día</h3>
-                    <div class="stats">
-                        <div class="stat-card">
-                            <div class="stat-number" id="total-ventas">0</div>
-                            <div class="stat-label">Ventas Hoy</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-number" id="total-monto">$0.00</div>
-                            <div class="stat-label">Monto Total</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="section">
-                    <h3>📝 Registros Recientes</h3>
-                    <button class="btn-success" onclick="exportarCSV()">📊 Exportar CSV</button>
-                    <button class="btn-secondary" onclick="sincronizarRegistros()">🔄 Actualizar</button>
-                    <button class="btn-danger" onclick="mostrarDialogoLimpiar()">🗑️ Limpiar Todo</button>
-                </div>
-
-                <div id="lista-registros">
-                    <!-- Los registros se cargarán aquí dinámicamente -->
-                </div>
-            </div>
-
-            <!-- Pestaña de Configuración -->
-            <div id="tab-configuracion" class="tab-content hidden">
-                <div class="section">
-                    <h3>⚙️ Configuración del Sistema</h3>
-                    <div class="alert alert-info">
-                        <strong>Sistema de Base de Datos Compartida:</strong> Este sistema usa GitHub para almacenar tanto la base de datos de empleados como los registros de ventas, permitiendo acceso desde cualquier dispositivo.
-                    </div>
-                </div>
-
-                <div class="section">
-                    <h3>👥 Base de Datos de Empleados</h3>
-                    <div class="form-group">
-                        <label for="github-empleados-url">URL del archivo CSV de empleados:</label>
-                        <input type="url" id="github-empleados-url" placeholder="https://raw.githubusercontent.com/usuario/repo/main/empleados_docentes.csv">
-                    </div>
-                    <button onclick="cargarEmpleadosDesdeGitHub()">🔗 Cargar Empleados</button>
-                </div>
-
-                <div class="section">
-                    <h3>📊 Base de Datos de Registros</h3>
-                    <div class="form-group">
-                        <label for="github-registros-url">URL del archivo CSV de registros:</label>
-                        <input type="url" id="github-registros-url" placeholder="https://raw.githubusercontent.com/usuario/repo/main/registros_ventas.csv">
-                    </div>
-                    <button onclick="cargarRegistrosDesdeGitHub()">🔗 Cargar Registros</button>
-                    
-                    <div class="alert alert-info" style="margin-top: 10px;">
-                        <strong>Nota:</strong> Para que los registros se compartan entre dispositivos, necesitas crear un archivo llamado "registros_ventas.csv" en tu repositorio de GitHub. El sistema creará registros locales que después puedes exportar y subir manualmente a GitHub.
-                    </div>
-                </div>
-
-                <div class="section">
-                    <h3>📂 Carga Manual de Archivos</h3>
-                    <div class="file-drop" id="file-drop" onclick="document.getElementById('csv-file').click()">
-                        <p>📁 Haz clic aquí o arrastra el archivo CSV</p>
-                        <p style="font-size: 0.9em; color: #666;">Para empleados: nro,cedula,apellidos,nombres,tipo,area</p>
-                    </div>
-                    <input type="file" id="csv-file" accept=".csv" style="display: none;" onchange="cargarCSV(event)">
-                </div>
-
-                <div class="section">
-                    <h3>📋 Estado del Sistema</h3>
-                    <p>Empleados cargados: <strong id="total-personas">0</strong></p>
-                    <p>Registros cargados: <strong id="total-registros-sistema">0</strong></p>
-                    <button class="btn-secondary" onclick="cargarDatosEjemplo()">📊 Cargar Datos de Ejemplo</button>
-                </div>
-
-                <div class="section">
-                    <h3>🔐 Configuración de Seguridad</h3>
-                    <p style="font-size: 0.9em; color: #666;">La clave para limpiar registros está configurada en el sistema. Solo los administradores pueden eliminar los registros de ventas.</p>
-                </div>
-            </div>
-        </div>
+      <nav class="nav-links" id="navLinks" aria-label="Navegación principal">
+        <a href="#inicio">Inicio</a>
+        <a href="#sabores">Sabores</a>
+        <a href="#menu">Menú</a>
+        <a href="#estrella">Platos estrella</a>
+        <a href="#eventos">Eventos</a>
+        <a href="#contacto" class="btn btn-primary">Haz tu pedido</a>
+      </nav>
     </div>
+  </header>
 
-    <!-- Dialog de contraseña -->
-    <div id="password-dialog" class="password-dialog hidden">
-        <div class="password-content">
-            <h3>🔐 Acceso Restringido</h3>
-            <p>Ingrese la clave de administrador para limpiar los registros:</p>
-            <input type="password" id="admin-password" placeholder="Ingrese la clave">
-            <div class="password-buttons">
-                <button class="btn-secondary" onclick="cerrarDialogoLimpiar()">Cancelar</button>
-                <button class="btn-danger" onclick="validarClaveYLimpiar()">Limpiar</button>
-            </div>
+  <main>
+    <section class="hero" id="inicio">
+      <!-- Imagen principal extraída de las referencias. Puedes reemplazar por una foto propia con el mismo nombre. -->
+      <div class="hero-bg" style="--image: url('assets/hero-yuyupa.jpg');"></div>
+      <div class="container hero-grid">
+        <div class="hero-copy reveal">
+          <span class="hero-kicker">Street food contemporáneo</span>
+          <h1>Street food con sabor que <span>se recuerda</span></h1>
+          <p>Wraps, quesadillas, burritos, paninis, nachos, ensaladas y salsas preparados para comer rico con el sello Yuyupa. Una propuesta fresca, rápida y con identidad propia.</p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="#menu">Ver menú</a>
+            <a class="btn btn-light" href="#contacto">Pedir por WhatsApp</a>
+          </div>
         </div>
+
+        <article class="hero-card reveal delay-1">
+          <div class="image-slot hero-product-img" style="--image: url('assets/burrito-yuyupa.jpg');">
+          </div>
+          <h3>Tu favorito está listo</h3>
+          <p>Comida casual, fresca y llena de sabor para todos los días.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="brand-promise">
+      <div class="container promise-grid reveal">
+        <article>
+          <!-- Espacio para icono tipo los de la presentación -->
+          <div class="icon-slot"><img src="assets/icon-promise-sabor.png" alt="Ícono sabor que conecta"></div>
+          <strong>Sabor que conecta</strong>
+          <span>Combinaciones frescas y memorables para todos los gustos.</span>
+        </article>
+        <article>
+          <div class="icon-slot cyan"><img src="assets/icon-promise-conexion.png" alt="Ícono conexión que se siente"></div>
+          <strong>Conexión que se siente</strong>
+          <span>Un lugar cercano para comer, compartir y volver.</span>
+        </article>
+        <article>
+          <div class="icon-slot yellow"><img src="assets/icon-promise-experiencia.png" alt="Ícono experiencia que se repite"></div>
+          <strong>Experiencia que se repite</strong>
+          <span>Productos validados que se disfrutan una y otra vez.</span>
+        </article>
+      </div>
+    </section>
+
+    <section class="section gastronomy" id="sabores">
+      <div class="container">
+        <div class="section-head reveal">
+          <div>
+            <span class="eyebrow">Nuestra propuesta gastronómica</span>
+            <h2>Sabores frescos, opciones para todos</h2>
+          </div>
+          <p>Una carta versátil, colorida y fácil de disfrutar: wraps, quesadillas, paninis, nachos, burritos y opciones frescas.</p>
+        </div>
+<div class="gastronomy-grid">
+          <article class="gas-card reveal">
+            <div class="image-slot gas-image" style="--image: url('assets/wraps-yuyupa-limpio.jpg');">
+            </div>
+            <div class="gas-body">
+              <div class="gas-icon red"><img src="assets/icon-categoria-wrap.png" alt="Ícono wraps"></div>
+              <h3>Wraps</h3>
+              <span class="pill red">Wraps & Quesadillas</span>
+              <p>Variedad de wraps y quesadillas artesanales, ideales para compartir o disfrutar en cualquier momento.</p>
+            </div>
+          </article>
+
+          <article class="gas-card reveal delay-1">
+            <div class="image-slot gas-image" style="--image: url('assets/paninis-nachos-yuyupa-limpio.jpg');">
+            </div>
+            <div class="gas-body">
+              <div class="gas-icon blue"><img src="assets/icon-categoria-nachos.png" alt="Ícono paninis, nachos y burritos"></div>
+              <h3>Burritos</h3>
+              <span class="pill blue">Paninis & Nachos</span>
+              <p>Paninis crujientes, nachos y burritos contundentes, versátiles y pensados para todos los gustos.</p>
+            </div>
+          </article>
+
+          <article class="gas-card reveal delay-2">
+            <div class="image-slot gas-image" style="--image: url('assets/frescos-yuyupa-limpio.jpg');">
+            </div>
+            <div class="gas-body">
+              <div class="gas-icon yellow"><img src="assets/icon-categoria-burrito.png" alt="Ícono frescos y ensaladas"></div>
+              <h3>Frescos</h3>
+              <span class="pill yellow">Ensaladas & Más</span>
+              <p>Opciones frescas y ligeras como ensaladas de vegetales, ensaladas de frutas y preparaciones naturales.</p>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section stars" id="estrella">
+      <div class="container">
+        <div class="section-head reveal">
+          <div>
+            <span class="eyebrow">Platos estrella</span>
+            <h2>Los favoritos de la casa</h2>
+          </div>
+          <p>Tres opciones llenas de sabor para disfrutar, compartir y volver por más.</p>
+        </div>
+
+        
+        <div class="star-grid favorites-unified">
+          <article class="favorite-card reveal">
+            <div class="image-slot favorite-image" style="--image: url('assets/producto-california.jpg');"></div>
+            <div class="favorite-body">
+              <div class="favorite-icon"><img src="assets/icon-categoria-wrap.png" alt="Ícono Wrap California"></div>
+              <h3>Wrap California</h3>
+              <span class="pill red">Wraps & Quesadillas</span>
+              <p>El consentido de la casa: pollo, guacamole, queso cheddar, maíz dulce, lechuga y mayonesa de la casa.</p>
+            </div>
+          </article>
+
+          <article class="favorite-card reveal delay-1">
+            <div class="image-slot favorite-image nachos-image" style="--image: url('assets/nachos-de-la-casa.jpg');"></div>
+            <div class="favorite-body">
+              <div class="favorite-icon"><img src="assets/icon-categoria-nachos.png" alt="Ícono Nachos de la Casa"></div>
+              <h3>Nachos de la Casa</h3>
+              <span class="pill blue">Mexicano</span>
+              <p>Nachos crujientes con carne de res molida, frijoles, queso, guacamole y salsa de la casa: una opción perfecta para compartir.</p>
+            </div>
+          </article>
+
+          <article class="favorite-card reveal delay-2">
+            <div class="image-slot favorite-image" style="--image: url('assets/burrito-yuyupa.jpg');"></div>
+            <div class="favorite-body">
+              <div class="favorite-icon"><img src="assets/icon-categoria-burrito.png" alt="Ícono Burrito"></div>
+              <h3>Burrito</h3>
+              <span class="pill yellow">Mexicano</span>
+              <p>Nuestro burrito combina queso cheddar, sazón única y mayonesa de la casa, llevado al grill para un acabado dorado.</p>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+
+    <section class="section menu-board" id="menu">
+      <div class="container">
+        <div class="section-head reveal">
+          <div>
+            <span class="eyebrow">Nuestro menú</span>
+            <h2>Elige tu antojo</h2>
+          </div>
+          <p>Conoce el menú de Yuyupa: una carta variada con wraps, burritos, ensaladas, paninis, quesadillas y más opciones para cada antojo.</p>
+        </div>
+
+        
+        <div class="menu-frame reveal">
+          <img src="assets/menu-yuyupa-actualizado.jpg" alt="Menú Yuyupa actualizado">
+        </div>
+      </div>
+    </section>
+
+    <section class="experience" id="experiencia">
+      <div class="experience-bg" style="--image: url('assets/ambiente-yuyupa.jpg');"></div>
+      <div class="container experience-content reveal">
+        <span class="eyebrow light">Experiencia Yuyupa</span>
+        <h2>Una comida casual, rápida y llena de sabor.</h2>
+        <p>Un espacio para disfrutar, compartir y volver. Yuyupa se siente cercano, fresco y perfecto para un plan relajado.</p>
+        <a class="btn btn-primary" href="#contacto">Escríbenos</a>
+      </div>
+    </section>
+
+    <section class="section events-section" id="eventos">
+      <div class="container events-layout">
+        <div class="event-panel reveal">
+          <span class="eyebrow warm">Eventos</span>
+          <h2>También vamos a tu evento</h2>
+          <p>Yuyupa se adapta a ferias, cumpleaños, activaciones, reuniones y espacios al aire libre con una propuesta casual, sabrosa y fácil de disfrutar.</p>
+          <ul class="benefits">
+            <li>Atención rápida</li>
+            <li>Productos para compartir</li>
+            <li>Formato visual y moderno</li>
+            <li>Experiencia cercana</li>
+          </ul>
+          <a class="btn btn-primary" href="#contacto">Consultar disponibilidad</a>
+        </div>
+
+        <div class="event-photo reveal delay-1">
+          <img src="assets/evento-yuyupa-claro.png" alt="Personas compartiendo y disfrutando Yuyupa en un evento" />
+        </div>
+      </div>
+    </section>
+
+    <section class="final-cta">
+      <div class="container reveal">
+        <h2>¿Listo para comer Yuyupa?</h2>
+        <p>Escríbenos, pregunta por el menú del día o separa Yuyupa para tu próximo evento.</p>
+        <div class="cta-actions">
+          <a class="btn btn-dark" href="#contacto">Pedir por WhatsApp</a>
+          <a class="btn btn-light" href="#menu">Ver menú</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer id="contacto">
+    <div class="container footer-grid">
+      <div>
+        <div class="footer-brand-box">
+          <img class="footer-brand-img" src="assets/logo-yuyupa-footer.png" alt="Logo Yuyupa">
+        </div>
+        <div class="footer-logo">Yuyupa</div>
+        <p>Street food contemporáneo con sabor, rapidez y personalidad. Wraps, quesadillas, burritos, paninis, nachos, ensaladas y más.</p>
+        <div class="socials" aria-label="Redes sociales">
+          <a href="https://www.instagram.com/" aria-label="Instagram" target="_blank" rel="noopener noreferrer">IG</a>
+          <a href="https://www.tiktok.com/" aria-label="TikTok" target="_blank" rel="noopener noreferrer">TK</a>
+          <a href="https://wa.me/593960057428" aria-label="WhatsApp" target="_blank" rel="noopener noreferrer">WA</a>
+        </div>
+      </div>
+      <div>
+        <h3>Contacto</h3>
+        <ul class="footer-list">
+          <li>WhatsApp: +593 96 005 7428</li>
+          <li>Correo: saladroom593@gmail.com</li>
+          <li>Instagram: @yuyupa.ec</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Ubicación</h3>
+        <ul class="footer-list">
+          <li>Quito, Ecuador</li>
+          <li>Presencia en espacios gastronómicos</li>
+          <li>Eventos privados y ferias</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Enlaces</h3>
+        <ul class="footer-list">
+          <li><a href="#sabores">Sabores</a></li>
+          <li><a href="#estrella">Platos estrella</a></li>
+          <li><a href="#menu">Menú</a></li>
+          <li><a href="#eventos">Eventos</a></li>
+        </ul>
+      </div>
     </div>
+    <div class="container footer-bottom">
+      <span>&copy; <span id="year"></span> Yuyupa. Todos los derechos reservados.</span>
+      <span>Sabor que conecta · Experiencia que se repite</span>
+    </div>
+  </footer>
 
-    <!-- Alertas flotantes -->
-    <div id="alertas" style="position: fixed; top: 20px; right: 20px; z-index: 1000;"></div>
-
-    <script>
-        // Variables globales
-        let personasDB = [];
-        let registrosDB = [];
-        const ADMIN_PASSWORD = 'abundancia1122';
-
-        // URLs de configuración (se guardan automáticamente)
-        let urlEmpleados = '';
-        let urlRegistros = '';
-
-        // Inicialización de la aplicación
-        document.addEventListener('DOMContentLoaded', function() {
-            inicializarSistema();
-            
-            // Configurar drag & drop para archivos
-            const fileDropArea = document.getElementById('file-drop');
-            
-            fileDropArea.addEventListener('dragover', function(e) {
-                e.preventDefault();
-                this.classList.add('dragover');
-            });
-            
-            fileDropArea.addEventListener('dragleave', function(e) {
-                e.preventDefault();
-                this.classList.remove('dragover');
-            });
-            
-            fileDropArea.addEventListener('drop', function(e) {
-                e.preventDefault();
-                this.classList.remove('dragover');
-                const files = e.dataTransfer.files;
-                if (files.length > 0) {
-                    const file = files[0];
-                    const extension = file.name.split('.').pop().toLowerCase();
-                    
-                    if (extension === 'csv') {
-                        procesarArchivoCSV(file);
-                    } else {
-                        mostrarAlerta('Formato no soportado. Use CSV', 'error');
-                    }
-                }
-            });
-
-            // Intentar cargar el logo si existe
-            const logoImg = document.getElementById('logo-principal');
-            logoImg.onload = function() {
-                document.getElementById('logo-placeholder').style.display = 'none';
-                logoImg.style.display = 'block';
-            };
-            logoImg.onerror = function() {
-                logoImg.style.display = 'none';
-                document.getElementById('logo-placeholder').style.display = 'block';
-            };
-
-            // Auto-sincronizar cada 2 minutos
-            setInterval(sincronizarRegistros, 120000);
-        });
-
-        // Inicialización completa del sistema
-        async function inicializarSistema() {
-            actualizarEstadoSincronizacion('Cargando configuración...', 'info');
-            
-            // Cargar configuración guardada
-            cargarConfiguracion();
-            
-            // Cargar datos locales primero
-            cargarDatosLocales();
-            
-            // Intentar cargar desde GitHub
-            await cargarDatosDesdeGitHub();
-            
-            // Actualizar interfaz
-            actualizarEstadisticas();
-            actualizarListaRegistros();
-            actualizarContadores();
-            
-            actualizarEstadoSincronizacion('Sistema listo ✅', 'success');
-        }
-
-        // Cargar configuración guardada
-        function cargarConfiguracion() {
-            urlEmpleados = localStorage.getItem('github-empleados-url') || '';
-            urlRegistros = localStorage.getItem('github-registros-url') || '';
-            
-            if (urlEmpleados) {
-                document.getElementById('github-empleados-url').value = urlEmpleados;
-            }
-            if (urlRegistros) {
-                document.getElementById('github-registros-url').value = urlRegistros;
-            }
-        }
-
-        // Cargar datos desde GitHub automáticamente
-        async function cargarDatosDesdeGitHub() {
-            const promesas = [];
-            
-            if (urlEmpleados) {
-                promesas.push(cargarEmpleadosDesdeURL(urlEmpleados));
-            }
-            
-            if (urlRegistros) {
-                promesas.push(cargarRegistrosDesdeURL(urlRegistros));
-            }
-            
-            if (promesas.length > 0) {
-                await Promise.allSettled(promesas);
-            }
-        }
-
-        // Función para cargar empleados desde GitHub
-        async function cargarEmpleadosDesdeGitHub() {
-            const url = document.getElementById('github-empleados-url').value.trim();
-            
-            if (!url) {
-                mostrarAlerta('Por favor ingrese la URL del archivo de empleados', 'error');
-                return;
-            }
-
-            urlEmpleados = url;
-            localStorage.setItem('github-empleados-url', url);
-            
-            await cargarEmpleadosDesdeURL(url);
-        }
-
-        // Función para cargar registros desde GitHub
-        async function cargarRegistrosDesdeGitHub() {
-            const url = document.getElementById('github-registros-url').value.trim();
-            
-            if (!url) {
-                mostrarAlerta('Por favor ingrese la URL del archivo de registros', 'error');
-                return;
-            }
-
-            urlRegistros = url;
-            localStorage.setItem('github-registros-url', url);
-            
-            await cargarRegistrosDesdeURL(url);
-        }
-
-        // Cargar empleados desde URL
-        async function cargarEmpleadosDesdeURL(url) {
-            try {
-                actualizarEstadoSincronizacion('Cargando empleados...', 'info');
-                
-                const rawUrl = convertirAURLRaw(url);
-                const response = await fetch(rawUrl);
-                
-                if (!response.ok) {
-                    throw new Error(`Error HTTP: ${response.status}`);
-                }
-                
-                const csvContent = await response.text();
-                procesarCSVEmpleados(csvContent);
-                
-                mostrarAlerta('Empleados cargados desde GitHub', 'success');
-            } catch (error) {
-                console.error('Error al cargar empleados:', error);
-                mostrarAlerta(`Error al cargar empleados: ${error.message}`, 'error');
-            }
-        }
-
-        // Cargar registros desde URL
-        async function cargarRegistrosDesdeURL(url) {
-            try {
-                actualizarEstadoSincronizacion('Cargando registros...', 'info');
-                
-                const rawUrl = convertirAURLRaw(url);
-                const response = await fetch(rawUrl);
-                
-                if (!response.ok) {
-                    // Si no existe el archivo de registros, no es un error crítico
-                    console.log('Archivo de registros no encontrado, usando registros locales');
-                    return;
-                }
-                
-                const csvContent = await response.text();
-                procesarCSVRegistros(csvContent);
-                
-                mostrarAlerta('Registros sincronizados desde GitHub', 'success');
-            } catch (error) {
-                console.log('No se pudieron cargar registros desde GitHub:', error.message);
-                // No mostrar error ya que es normal que no exista al principio
-            }
-        }
-
-        // Convertir URL de GitHub a raw
-        function convertirAURLRaw(url) {
-            if (url.includes('github.com') && !url.includes('raw.githubusercontent.com')) {
-                return url.replace('github.com', 'raw.githubusercontent.com').replace('/blob', '');
-            }
-            return url;
-        }
-
-        // Sincronizar registros manualmente
-        async function sincronizarRegistros() {
-            actualizarEstadoSincronizacion('Sincronizando...', 'info');
-            
-            if (urlRegistros) {
-                await cargarRegistrosDesdeURL(urlRegistros);
-            }
-            
-            actualizarEstadisticas();
-            actualizarListaRegistros();
-            
-            actualizarEstadoSincronizacion('Sincronizado ✅', 'success');
-            setTimeout(() => {
-                actualizarEstadoSincronizacion('Sistema listo ✅', 'success');
-            }, 2000);
-        }
-
-        // Actualizar estado de sincronización
-        function actualizarEstadoSincronizacion(mensaje, tipo) {
-            const elemento = document.getElementById('sync-status');
-            elemento.textContent = mensaje;
-            elemento.className = `sync-status ${tipo}`;
-        }
-
-        // Mostrar diálogo de contraseña para limpiar
-        function mostrarDialogoLimpiar() {
-            document.getElementById('password-dialog').classList.remove('hidden');
-            document.getElementById('admin-password').focus();
-        }
-
-        // Cerrar diálogo de contraseña
-        function cerrarDialogoLimpiar() {
-            document.getElementById('password-dialog').classList.add('hidden');
-            document.getElementById('admin-password').value = '';
-        }
-
-        // Validar clave y limpiar registros
-        function validarClaveYLimpiar() {
-            const password = document.getElementById('admin-password').value;
-            
-            if (password === ADMIN_PASSWORD) {
-                registrosDB = [];
-                guardarDatosLocales();
-                actualizarEstadisticas();
-                actualizarListaRegistros();
-                actualizarContadores();
-                cerrarDialogoLimpiar();
-                mostrarAlerta('Registros eliminados exitosamente', 'success');
-                
-                // Mostrar mensaje de que deben actualizar GitHub
-                setTimeout(() => {
-                    mostrarAlerta('Recuerde actualizar el archivo de registros en GitHub', 'info');
-                }, 2000);
-            } else {
-                mostrarAlerta('Clave incorrecta', 'error');
-                document.getElementById('admin-password').value = '';
-                document.getElementById('admin-password').focus();
-            }
-        }
-
-        // Procesar CSV de empleados
-        function procesarCSVEmpleados(csvContent) {
-            const lineas = csvContent.split('\n');
-            const personas = [];
-
-            for (let i = 0; i < lineas.length; i++) {
-                const linea = lineas[i].trim();
-                if (linea && !linea.toLowerCase().includes('apellidos')) {
-                    const columnas = parseCSVLine(linea);
-                    
-                    if (columnas.length >= 6) {
-                        const cedula = columnas[1] ? columnas[1].trim() : '';
-                        const apellidos = columnas[2] ? columnas[2].trim() : '';
-                        const nombres = columnas[3] ? columnas[3].trim() : '';
-                        const tipo = columnas[4] ? columnas[4].trim() : '';
-                        const area = columnas[5] ? columnas[5].trim() : '';
-                        
-                        if (cedula && apellidos && nombres) {
-                            personas.push({
-                                cedula: cedula,
-                                apellidos: apellidos,
-                                nombres: nombres,
-                                tipo: tipo,
-                                area: area
-                            });
-                        }
-                    }
-                }
-            }
-
-            if (personas.length > 0) {
-                personasDB = personas;
-                guardarDatosLocales();
-                actualizarContadores();
-            }
-        }
-
-        // Procesar CSV de registros
-        function procesarCSVRegistros(csvContent) {
-            const lineas = csvContent.split('\n');
-            const registros = [];
-
-            for (let i = 1; i < lineas.length; i++) {
-                const linea = lineas[i].trim();
-                if (linea) {
-                    const columnas = parseCSVLine(linea);
-                    
-                    if (columnas.length >= 10) {
-                        const registro = {
-                            id: Date.now() + Math.random(),
-                            timestamp: new Date().toISOString(),
-                            fecha: columnas[0].replace(/"/g, '').trim(),
-                            hora: columnas[1].replace(/"/g, '').trim(),
-                            cedula: columnas[2].replace(/"/g, '').trim(),
-                            apellidos: columnas[3].replace(/"/g, '').trim(),
-                            nombres: columnas[4].replace(/"/g, '').trim(),
-                            nombreCompleto: `${columnas[3].replace(/"/g, '').trim()} ${columnas[4].replace(/"/g, '').trim()}`,
-                            tipo: columnas[5].replace(/"/g, '').trim(),
-                            area: columnas[6].replace(/"/g, '').trim(),
-                            items: columnas[7].replace(/"/g, '').trim(),
-                            total: parseFloat(columnas[8].replace(/"/g, '').trim()) || 0,
-                            atendidoPor: columnas[9].replace(/"/g, '').trim()
-                        };
-                        
-                        registros.push(registro);
-                    }
-                }
-            }
-
-            if (registros.length > 0) {
-                // Combinar registros existentes con los nuevos, evitando duplicados
-                const registrosExistentes = registrosDB.map(r => `${r.fecha}_${r.hora}_${r.cedula}`);
-                const nuevosRegistros = registros.filter(r => 
-                    !registrosExistentes.includes(`${r.fecha}_${r.hora}_${r.cedula}`)
-                );
-                
-                registrosDB = [...registrosDB, ...nuevosRegistros];
-                guardarDatosLocales();
-                actualizarContadores();
-            }
-        }
-
-        // Funciones de navegación por pestañas
-        function switchTab(tabName) {
-            const tabs = document.querySelectorAll('.tab-content');
-            tabs.forEach(tab => tab.classList.add('hidden'));
-            
-            const tabButtons = document.querySelectorAll('.tab');
-            tabButtons.forEach(btn => btn.classList.remove('active'));
-            
-            document.getElementById('tab-' + tabName).classList.remove('hidden');
-            event.target.classList.add('active');
-            
-            if (tabName === 'registros') {
-                actualizarEstadisticas();
-                actualizarListaRegistros();
-            }
-        }
-
-        // Función para validar persona
-        function validarPersona() {
-            const cedula = document.getElementById('cedula').value.trim();
-            
-            if (!cedula) {
-                mostrarAlerta('Por favor ingrese un número de cédula', 'error');
-                return;
-            }
-
-            const persona = personasDB.find(p => p.cedula === cedula);
-            
-            if (persona) {
-                document.getElementById('persona-nombre').textContent = `${persona.apellidos} ${persona.nombres}`;
-                document.getElementById('persona-tipo').textContent = persona.tipo;
-                document.getElementById('persona-area').textContent = persona.area;
-                document.getElementById('persona-info').classList.remove('hidden');
-                
-                mostrarAlerta('Persona validada correctamente', 'success');
-            } else {
-                mostrarAlerta('Número de cédula no encontrado en la base de datos', 'error');
-                document.getElementById('persona-info').classList.add('hidden');
-            }
-        }
-
-        // Función para registrar consumo
-        function registrarConsumo() {
-            const cedula = document.getElementById('cedula').value.trim();
-            const items = document.getElementById('items').value.trim();
-            const total = parseFloat(document.getElementById('total').value) || 0;
-            const atendidoPor = document.getElementById('atendido-por').value;
-
-            if (!cedula || !items || total <= 0 || !atendidoPor) {
-                mostrarAlerta('Por favor complete todos los campos', 'error');
-                return;
-            }
-
-            const persona = personasDB.find(p => p.cedula === cedula);
-            if (!persona) {
-                mostrarAlerta('Error: Persona no encontrada', 'error');
-                return;
-            }
-
-            const registro = {
-                id: Date.now(),
-                timestamp: new Date().toISOString(),
-                fecha: new Date().toLocaleDateString('es-EC'),
-                hora: new Date().toLocaleTimeString('es-EC'),
-                cedula: cedula,
-                apellidos: persona.apellidos,
-                nombres: persona.nombres,
-                nombreCompleto: `${persona.apellidos} ${persona.nombres}`,
-                tipo: persona.tipo,
-                area: persona.area,
-                items: items,
-                total: total,
-                atendidoPor: atendidoPor
-            };
-
-            registrosDB.push(registro);
-            guardarDatosLocales();
-            
-            mostrarAlerta(`Consumo registrado exitosamente. Total: ${total.toFixed(2)}`, 'success');
-            
-            // Mostrar recordatorio para sincronizar
-            setTimeout(() => {
-                mostrarAlerta('Recordatorio: Exporte y actualice los registros en GitHub regularmente', 'info');
-            }, 3000);
-            
-            limpiarFormulario();
-            actualizarEstadisticas();
-            actualizarContadores();
-        }
-
-        // Función para limpiar formulario
-        function limpiarFormulario() {
-            document.getElementById('cedula').value = '';
-            document.getElementById('items').value = '';
-            document.getElementById('total').value = '';
-            document.getElementById('atendido-por').value = '';
-            document.getElementById('persona-info').classList.add('hidden');
-        }
-
-        // Función para cargar archivo CSV
-        function cargarCSV(event) {
-            const file = event.target.files[0];
-            if (file) {
-                procesarArchivoCSV(file);
-            }
-        }
-
-        // Función para procesar archivo CSV
-        function procesarArchivoCSV(file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const csvContent = e.target.result;
-                procesarCSVEmpleados(csvContent);
-                mostrarAlerta(`Archivo procesado: ${personasDB.length} empleados cargados`, 'success');
-            };
-            reader.readAsText(file, 'UTF-8');
-        }
-
-        // Función auxiliar para parsear líneas CSV
-        function parseCSVLine(line) {
-            const result = [];
-            let current = '';
-            let inQuotes = false;
-            
-            for (let i = 0; i < line.length; i++) {
-                const char = line[i];
-                
-                if (char === '"') {
-                    inQuotes = !inQuotes;
-                } else if (char === ',' && !inQuotes) {
-                    result.push(current);
-                    current = '';
-                } else {
-                    current += char;
-                }
-            }
-            
-            result.push(current);
-            return result;
-        }
-
-        // Función para cargar datos de ejemplo
-        function cargarDatosEjemplo() {
-            personasDB = [
-                { cedula: "1104873425", apellidos: "ABAD JARAMILLO", nombres: "PAOLA BELEN", tipo: "Docentes", area: "Dirección de Ciencias Humanas" },
-                { cedula: "1721080578", apellidos: "ABATA MEZA", nombres: "JOSUE ALEXANDER", tipo: "Empleado", area: "Marketing y Admisiones Matriz" },
-                { cedula: "1716292923", apellidos: "AGUILAR RODRIGUEZ", nombres: "DAYANA MARCELA", tipo: "Docentes", area: "Escuela de Medicina" },
-                { cedula: "1707622161", apellidos: "AGUILERA ZURITA", nombres: "FERNANDO NELSON", tipo: "Docentes", area: "Escuela de Odontología" },
-                { cedula: "1713572822", apellidos: "AGUINAGA ITURRALDE", nombres: "MARIA ISABEL", tipo: "Docentes", area: "Escuela de Idiomas Matriz" },
-                { cedula: "1712513256", apellidos: "AGUINAGA ROMERO", nombres: "FERNANDO ESTEBAN", tipo: "Docentes", area: "Posgrados Facultad de Ciencias Médicas de la Salud y la Vida" },
-                { cedula: "1718077702", apellidos: "AGUIRRE ACUÑA", nombres: "MICHELLE FERNANDA", tipo: "Empleado", area: "Investigación y Desarrollo" },
-                { cedula: "1900409267", apellidos: "AGUIRRE AGUILAR", nombres: "JOHANNA PAOLA", tipo: "Docentes", area: "Facultad de Ciencias Médicas de la Salud y de la Vida" },
-                { cedula: "1718186826", apellidos: "AGUIRRE CARCELEN", nombres: "WASHINGTON PAUL", tipo: "Docentes", area: "Escuela de Medicina" }
-            ];
-            
-            guardarDatosLocales();
-            actualizarContadores();
-            mostrarAlerta('Datos de ejemplo cargados exitosamente', 'success');
-        }
-
-        // Función para exportar registros a CSV
-        function exportarCSV() {
-            if (registrosDB.length === 0) {
-                mostrarAlerta('No hay registros para exportar', 'error');
-                return;
-            }
-
-            let csv = 'Fecha,Hora,Cedula,Apellidos,Nombres,Tipo,Area,Items,Total,Atendido_Por\n';
-            
-            registrosDB.forEach(registro => {
-                csv += `"${registro.fecha}","${registro.hora}","${registro.cedula}","${registro.apellidos}","${registro.nombres}","${registro.tipo}","${registro.area}","${registro.items}","${registro.total}","${registro.atendidoPor}"\n`;
-            });
-
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            const url = URL.createObjectURL(blob);
-            link.setAttribute('href', url);
-            link.setAttribute('download', `registros_ventas_${new Date().toISOString().split('T')[0]}.csv`);
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-
-            mostrarAlerta('Archivo CSV exportado exitosamente', 'success');
-            
-            // Mostrar instrucciones para GitHub
-            setTimeout(() => {
-                mostrarAlerta('Suba este archivo a GitHub como "registros_ventas.csv" para compartir entre dispositivos', 'info');
-            }, 2000);
-        }
-
-        // Función para actualizar estadísticas
-        function actualizarEstadisticas() {
-            const hoy = new Date().toLocaleDateString('es-EC');
-            const registrosHoy = registrosDB.filter(r => r.fecha === hoy);
-            const totalVentas = registrosHoy.length;
-            const totalMonto = registrosHoy.reduce((sum, r) => sum + r.total, 0);
-
-            document.getElementById('total-ventas').textContent = totalVentas;
-            document.getElementById('total-monto').textContent = `${totalMonto.toFixed(2)}`;
-        }
-
-        // Función para actualizar lista de registros
-        function actualizarListaRegistros() {
-            const container = document.getElementById('lista-registros');
-            container.innerHTML = '';
-
-            if (registrosDB.length === 0) {
-                container.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">No hay registros disponibles</p>';
-                return;
-            }
-
-            const registrosRecientes = registrosDB.slice(-10).reverse();
-            
-            registrosRecientes.forEach(registro => {
-                const div = document.createElement('div');
-                div.className = 'registro-item';
-                div.innerHTML = `
-                    <div class="registro-fecha">${registro.fecha} - ${registro.hora}</div>
-                    <div class="registro-profesor">${registro.nombreCompleto} (${registro.cedula})</div>
-                    <div class="registro-items">Tipo: ${registro.tipo} | Área: ${registro.area}</div>
-                    <div class="registro-items">Items: ${registro.items}</div>
-                    <div class="registro-total">Total: ${registro.total.toFixed(2)} - Atendido por: ${registro.atendidoPor}</div>
-                `;
-                container.appendChild(div);
-            });
-        }
-
-        // Función para actualizar contadores
-        function actualizarContadores() {
-            document.getElementById('total-personas').textContent = personasDB.length;
-            document.getElementById('total-registros-sistema').textContent = registrosDB.length;
-        }
-
-        // Función para mostrar alertas
-        function mostrarAlerta(mensaje, tipo) {
-            const alertasContainer = document.getElementById('alertas');
-            const alert = document.createElement('div');
-            alert.className = `alert alert-${tipo === 'success' ? 'success' : tipo === 'info' ? 'info' : 'error'}`;
-            alert.textContent = mensaje;
-            alert.style.marginBottom = '10px';
-            alert.style.boxShadow = '0 4px 12px rgba(0,0,0,0.3)';
-            alert.style.borderRadius = '8px';
-            alert.style.fontSize = '0.9em';
-            alert.style.maxWidth = '300px';
-            alert.style.wordWrap = 'break-word';
-            
-            alertasContainer.appendChild(alert);
-            
-            setTimeout(() => {
-                if (alert.parentNode) {
-                    alert.parentNode.removeChild(alert);
-                }
-            }, tipo === 'info' ? 5000 : 3000);
-        }
-
-        // Funciones de almacenamiento local
-        function guardarDatosLocales() {
-            localStorage.setItem('personasDB', JSON.stringify(personasDB));
-            localStorage.setItem('registrosDB', JSON.stringify(registrosDB));
-        }
-
-        function cargarDatosLocales() {
-            const personasGuardadas = localStorage.getItem('personasDB');
-            const registrosGuardados = localStorage.getItem('registrosDB');
-            
-            if (personasGuardadas) {
-                personasDB = JSON.parse(personasGuardadas);
-            }
-            
-            if (registrosGuardados) {
-                registrosDB = JSON.parse(registrosGuardados);
-            }
-            
-            actualizarContadores();
-        }
-
-        // Permitir Enter para validar y para la contraseña
-        document.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                const activeElement = document.activeElement;
-                
-                if (activeElement.id === 'cedula') {
-                    validarPersona();
-                } else if (activeElement.id === 'admin-password') {
-                    validarClaveYLimpiar();
-                }
-            }
-        });
-
-        // Precargar configuración común de GitHub
-        window.addEventListener('load', function() {
-            const empleadosUrl = document.getElementById('github-empleados-url');
-            const registrosUrl = document.getElementById('github-registros-url');
-            
-            // Si no hay URLs configuradas, sugerir formato
-            if (!empleadosUrl.value) {
-                empleadosUrl.placeholder = "https://raw.githubusercontent.com/tu-usuario/tu-repo/main/empleados_docentes.csv";
-            }
-            if (!registrosUrl.value) {
-                registrosUrl.placeholder = "https://raw.githubusercontent.com/tu-usuario/tu-repo/main/registros_ventas.csv";
-            }
-        });
-    </script>
+  <script src="script.js"></script>
 </body>
 </html>
+
